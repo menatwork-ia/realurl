@@ -28,7 +28,6 @@
  * @license    http://opensource.org/licenses/lgpl-3.0.html
  * @version    $Id$
  */
-
 /**
  * Replace core callbacks
  */
@@ -65,7 +64,7 @@ foreach ($GLOBALS['TL_DCA']['tl_page']['palettes'] as $keyPalette => $valuePalet
 {
     if ($keyPalette != "root" && $keyPalette != '__selector__')
     {
-        $GLOBALS['TL_DCA']['tl_page']['palettes'][$keyPalette] = preg_replace('@([,|;]type)([,|;])@', '$1,realurl_overwrite$2', $GLOBALS['TL_DCA']['tl_page']['palettes'][$keyPalette]);
+        $GLOBALS['TL_DCA']['tl_page']['palettes'][$keyPalette] = preg_replace('@([,|;]type)([,|;])@', '$1,realurl_no_inheritance,realurl_overwrite$2', $GLOBALS['TL_DCA']['tl_page']['palettes'][$keyPalette]);
     }
 }
 
@@ -94,12 +93,21 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['useRootAlias'] = array(
     'eval'      => array('tl_class' => 'w50'),
 );
 
+$GLOBALS['TL_DCA']['tl_page']['fields']['realurl_no_inheritance'] = array(
+    'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance'],
+    'inputType' => 'checkbox',
+    'eval'      => array(
+        'tl_class'  => 'w50',
+        'doNotCopy' => true
+    ),
+);
+
 $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_overwrite'] = array(
     'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_overwrite'],
     'inputType' => 'checkbox',
     'eval'      => array(
         'submitOnChange' => true,
-        'tl_class'       => 'clr',
+        'tl_class'       => 'w50',
         'doNotCopy'      => true
     ),
 );
@@ -168,18 +176,37 @@ class tl_page_realurl extends tl_page
     public function generateFolderAlias($varValue, $dc, $useExtException = false)
     {
         // Load current page
-        $objPage = $this->getPageDetails($dc->id);
+        $objPage          = $this->getPageDetails($dc->id);
+        $objParent        = null;
+        $blnNoParentAlias = false;
 
         // Load root page
         if ($objPage->type == 'root')
         {
-            $objRoot = $objPage;
+            $objRoot          = $objPage;
+            $blnNoParentAlias = false;
+            $objParent        = null;
         }
         else
         {
+            // Get root page
             $objRoot = $this->Database
                     ->prepare("SELECT * FROM tl_page WHERE id=?")
                     ->execute($objPage->rootId);
+
+            // Get parent page
+            $objParent = $this->Database
+                    ->prepare("SELECT * FROM tl_page WHERE id=?")
+                    ->execute($objPage->pid);
+
+            // Get state of no inheritance
+            if ($objPage->numRows != 0)
+            {
+                if ($objPage->realurl_no_inheritance == 1)
+                {
+                    $blnNoParentAlias = true;
+                }
+            }
         }
 
         // Check if realurl is enabled
@@ -220,13 +247,13 @@ class tl_page_realurl extends tl_page
 
         // Create alias
         // Check if no overwrite, no root page and no add language to url
-        if ($blnRealUrlOverwrite == false && $objPage->type != 'root' && $objRoot->useRootAlias == true)
+        if ($blnRealUrlOverwrite == false && $objPage->type != 'root' && $objRoot->useRootAlias == true && $blnNoParentAlias == false)
         {
             $objParent = $this->Database->executeUncached("SELECT * FROM tl_page WHERE id=" . (int) $objPage->pid);
             $varValue  = $objParent->alias . '/' . $varValue;
         }
         // Check if no overwrite, no root page and add language to url
-        else if ($blnRealUrlOverwrite == false && $objPage->type != 'root' && $objRoot->useRootAlias == false)
+        else if ($blnRealUrlOverwrite == false && $objPage->type != 'root' && $objRoot->useRootAlias == false && $blnNoParentAlias == false)
         {
             $objParent = $this->Database->executeUncached("SELECT * FROM tl_page WHERE id=" . (int) $objPage->pid);
 
@@ -239,6 +266,11 @@ class tl_page_realurl extends tl_page
             {
                 $varValue = $objParent->alias . '/' . $varValue;
             }
+        }
+        // Dont use parent alias if realurl_no_inheritance is active
+        else if ($blnNoParentAlias == true)
+        {
+            // Use the value like it is
         }
         // If overwrite is enabled
         else if ($blnRealUrlOverwrite == true && $objPage->type != 'root')
@@ -255,7 +287,7 @@ class tl_page_realurl extends tl_page
         // Check if rootpage
         else if ($objPage->type == 'root')
         {
-            $varValue = $varValue;
+            // Use the value like it is
         }
 
         // Check whether the page alias exists, if add language to url is enabled
@@ -461,7 +493,7 @@ class tl_page_realurl extends tl_page
                 ->execute();
 
         while ($objAlias->next())
-        {            
+        {
             if (stripos($objAlias->alias, "/") === false)
             {
                 $arrLists[$objAlias->alias] = true;
