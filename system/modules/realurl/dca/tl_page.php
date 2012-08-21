@@ -120,7 +120,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_basealias'] = array(
         'spaceToUnderscore' => true,
         'trailingSlash'     => true,
         'doNotCopy'         => true,
-        'tl_class'          => 'long'
+        'tl_class'          => 'clr long'
     )
 );
 
@@ -150,7 +150,7 @@ class tl_page_realurl extends tl_page
     }
 
     /**
-     * Laod the current full alias
+     * Load the current full alias
      * 
      * @param type $varValue
      * @param type $dc
