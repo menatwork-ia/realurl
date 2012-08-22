@@ -25,7 +25,6 @@
  * @author     MEN AT WORK <cms@men-at-work.de>
  * @license    GNU/LGPL
  */
-
 include_once TL_ROOT . '/system/modules/backend/dca/tl_page.php';
 include_once TL_ROOT . '/system/modules/realurl/dca/tl_page.php';
 
@@ -62,7 +61,9 @@ class RealUrlMaintenance extends Backend implements executable
                         // Check if alias exist or create one
                         if ($objRoot->alias == '')
                         {
-                            $strAlias = $objPageRealUrl->generateFolderAlias('', (object) array('id'           => $objRootPages->id, 'activeRecord' => $objRootPages), true);
+                            $strAlias = $objPageRealUrl->generateFolderAlias('', (object) array(
+                                        'id'           => $objRootPages->id,
+                                        'activeRecord' => $objRootPages), true);
 
                             $this->Database
                                     ->prepare("UPDATE tl_page SET alias=? WHERE id=?")

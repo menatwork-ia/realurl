@@ -124,6 +124,9 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_basealias'] = array(
     )
 );
 
+/**
+ * Helper/Callback class
+ */
 class tl_page_realurl extends tl_page
 {
 
@@ -175,39 +178,40 @@ class tl_page_realurl extends tl_page
      */
     public function generateFolderAlias($varValue, $dc, $useExtException = false)
     {
-        // Load current page
-        $objPage          = $this->getPageDetails($dc->id);
-        $objParent        = null;
-        $blnNoParentAlias = false;
+        // Init some Vars
+        $objPage   = $this->getPageDetails($dc->id);
+        $objRoot   = null;
+        $objParent = null;
+
+        $blnNoParentAlias    = false;
+        $blnIsRoot           = false;
+        $blnUseRootAlias     = false;
+        $blnRealUrlOverwrite = false;
+        $autoAlias           = false;
+
+        $strRealUrlOverwrite = "";
 
         // Load root page
         if ($objPage->type == 'root')
         {
-            $objRoot          = $objPage;
-            $blnNoParentAlias = false;
-            $objParent        = null;
+            $objRoot   = $objPage;
+            $blnIsRoot = true;
         }
         else
         {
-            // Get root page
-            $objRoot = $this->Database
-                    ->prepare("SELECT * FROM tl_page WHERE id=?")
-                    ->execute($objPage->rootId);
-
-            // Get parent page
-            $objParent = $this->Database
-                    ->prepare("SELECT * FROM tl_page WHERE id=?")
-                    ->execute($objPage->pid);
+            // Get root/parent page
+            $objRoot   = $this->getPageDetails($objPage->rootId);
+            $objParent = $this->getPageDetails($objPage->pid);
 
             // Get state of no inheritance
-            if ($objPage->numRows != 0)
+            if ($objParent->realurl_no_inheritance == 1)
             {
-                if ($objPage->realurl_no_inheritance == 1)
-                {
-                    $blnNoParentAlias = true;
-                }
+                $blnNoParentAlias = true;
             }
         }
+
+        // Set state of use root alias
+        $blnUseRootAlias = $objRoot->useRootAlias;
 
         // Check if realurl is enabled
         if (!$objRoot->folderAlias)
@@ -215,27 +219,16 @@ class tl_page_realurl extends tl_page
             return parent::generateAlias($varValue, $dc);
         }
 
-        if (in_array($varValue, $GLOBALS['URL_KEYWORDS']) && $useExtException == false)
-        {
-            throw new Exception($GLOBALS['TL_LANG']['ERR']['realUrlKeywords'], $objPage->id);
-        }
-        else if (in_array($varValue, $GLOBALS['URL_KEYWORDS']) && $useExtException == true)
-        {
-            $strUrl = $this->Environment->base . "contao/main.php?do=page&act=edit&id=" . $objPage->id;
-
-            // The alias of the site includes a keyword. <a href="%s">%s (ID: $s)</a>
-            throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['realUrlKeywordsExt'], $strUrl, $objPage->title, $objPage->id, $varValue), $objPage->id);
-        }
-
-        // Init vars
-        $autoAlias           = false;
-        $blnRealUrlOverwrite = false;
-        $strRealUrlOverwrite = "";
-
-        if ($this->Input->post('realurl_overwrite') == true)
+        // Check if overwrite is enabeld. Only for current DC
+        if ($dc->id == $this->Input->get('id') && $this->Input->post('realurl_overwrite') == true)
         {
             $blnRealUrlOverwrite = true;
             $strRealUrlOverwrite = $this->Input->post('realurl_basealias');
+
+            if (strlen($strRealUrlOverwrite) == 0)
+            {
+                throw new Exception($GLOBALS['TL_LANG']['ERR']['emptyRealUrlOverwrite']);
+            }
         }
 
         // Generate an alias if there is none
@@ -245,49 +238,97 @@ class tl_page_realurl extends tl_page
             $varValue  = standardize($objPage->title);
         }
 
-        // Create alias
-        // Check if no overwrite, no root page and no add language to url
-        if ($blnRealUrlOverwrite == false && $objPage->type != 'root' && $objRoot->useRootAlias == true && $blnNoParentAlias == false)
+        // Check Keywords
+        if (in_array($varValue, $GLOBALS['URL_KEYWORDS']) && $useExtException == false)
         {
-            $objParent = $this->Database->executeUncached("SELECT * FROM tl_page WHERE id=" . (int) $objPage->pid);
-            $varValue  = $objParent->alias . '/' . $varValue;
+            throw new Exception($GLOBALS['TL_LANG']['ERR']['realUrlKeywords'], $objPage->id);
         }
-        // Check if no overwrite, no root page and add language to url
-        else if ($blnRealUrlOverwrite == false && $objPage->type != 'root' && $objRoot->useRootAlias == false && $blnNoParentAlias == false)
+        else if (in_array($varValue, $GLOBALS['URL_KEYWORDS']) && $useExtException == true)
         {
-            $objParent = $this->Database->executeUncached("SELECT * FROM tl_page WHERE id=" . (int) $objPage->pid);
+            $strUrl = $this->Environment->base . "contao/main.php?do=page&act=edit&id=" . $objPage->id;
+            throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['realUrlKeywordsExt'], $strUrl, $objPage->title, $objPage->id, $varValue), $objPage->id);
+        }
 
-            // If parent is a root page don't use the alias from it
-            if ($objParent->type == 'root')
-            {
-                $varValue = $varValue;
-            }
-            else
-            {
-                $varValue = $objParent->alias . '/' . $varValue;
-            }
-        }
-        // Dont use parent alias if realurl_no_inheritance is active
-        else if ($blnNoParentAlias == true)
+        // Create alias, check some/many conditions
+        // Check if we have a root page
+        if ($blnIsRoot == true)
         {
-            // Use the value like it is
+            // Use the value like it is, because we have a root page
         }
-        // If overwrite is enabled
-        else if ($blnRealUrlOverwrite == true && $objPage->type != 'root')
+        else
         {
-            if (strlen($strRealUrlOverwrite) == 0)
+            // Check if overwrite is enabled
+            if ($blnRealUrlOverwrite == true)
             {
-                throw new Exception($GLOBALS['TL_LANG']['ERR']['emptyRealUrlOverwrite']);
-            }
-            else
-            {
+                // Use only the overwrite value 
                 $varValue = preg_replace("/\/$/", "", $strRealUrlOverwrite);
             }
-        }
-        // Check if rootpage
-        else if ($objPage->type == 'root')
-        {
-            // Use the value like it is
+            else
+            {
+                // Check if we have to skip the parent alias
+                if ($blnNoParentAlias == true)
+                {
+                    // Create a copy from current parent
+                    $objValidParent = $objParent;
+
+                    // Get the next valid parent page
+                    while (true)
+                    {
+                        $objValidParent = $this->getPageDetails($objValidParent->pid);
+
+                        if ($objValidParent == null)
+                        {
+                            // If this is true we have an error or bug, but we will stop here
+                            throw new Exception($GLOBALS['TL_LANG']['ERR']['noPageFound'], $objPage->id);
+                        }
+
+                        if ($objValidParent->realurl_no_inheritance == 0 || $objValidParent->realurl_no_inheritance == '' || $objValidParent->type == 'root')
+                        {
+                            break;
+                        }
+                    }
+
+                    // Check if we have root and if we can use it
+                    if ($objValidParent->type == 'root')
+                    {
+                        if ($blnUseRootAlias == true)
+                        {
+                            // Use the parent alias
+                            $varValue = $objValidParent->alias . '/' . $varValue;
+                        }
+                        else
+                        {
+                            // Use the value like it is, because we have no valid parent and we could not use the root
+                        }
+                    }
+                    else
+                    {
+                        // Use the parent alias
+                        $varValue = $objValidParent->alias . '/' . $varValue;
+                    }
+                }
+                else
+                {
+                    // Check if we have to use the root alias
+                    if ($blnUseRootAlias == true)
+                    {
+                        // Use the parent alias
+                        $varValue = $objParent->alias . '/' . $varValue;
+                    }
+                    else
+                    {
+                        // If we don`t use the root, check if parent is one
+                        if ($objParent->type == 'root')
+                        {
+                            // Use the value like it is, because the parent page is a root page
+                        }
+                        else
+                        {
+                            $varValue = $objParent->alias . '/' . $varValue;
+                        }
+                    }
+                }
+            }
         }
 
         // Check whether the page alias exists, if add language to url is enabled
@@ -421,7 +462,15 @@ class tl_page_realurl extends tl_page
         // Check if alias exists or create one
         if ($dc->activeRecord->alias == '')
         {
-            $strAlias = $this->generateFolderAlias('', $dc, false);
+            try
+            {
+                $strAlias = $this->generateFolderAlias('', $dc, true);
+            }
+            catch (Exception $exc)
+            {
+                $_SESSION['TL_INFO'][] = $exc->getMessage();
+                return;
+            }
 
             $this->Database
                     ->prepare("UPDATE tl_page SET alias=? WHERE id=?")
@@ -431,7 +480,15 @@ class tl_page_realurl extends tl_page
         // Check if the subalias is enabled
         if ($objRoot->subAlias)
         {
-            $this->generateAliasRecursive($dc->id);
+            try
+            {
+                $this->generateAliasRecursive($dc->id, true);
+            }
+            catch (Exception $exc)
+            {
+                $_SESSION['TL_INFO'][] = $exc->getMessage();
+                return;
+            }
         }
     }
 
@@ -462,7 +519,9 @@ class tl_page_realurl extends tl_page
 
                 $arrFolders = trimsplit("/", $objChildren->alias);
                 $strAlias   = array_pop($arrFolders);
-                $strAlias   = $this->generateFolderAlias($strAlias, (object) array('id'           => $objChildren->id, 'activeRecord' => $objChildren), $useExtException);
+                $strAlias   = $this->generateFolderAlias($strAlias, (object) array(
+                            'id'           => $objChildren->id,
+                            'activeRecord' => $objChildren), $useExtException);
 
                 $this->Database
                         ->prepare("UPDATE tl_page SET alias=? WHERE id=?")
