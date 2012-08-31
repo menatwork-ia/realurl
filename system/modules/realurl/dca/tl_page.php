@@ -232,7 +232,12 @@ class tl_page_realurl extends tl_page
         }
 
         // Generate an alias if there is none
-        if ($varValue == '')
+        if ($varValue == '' && $dc->id == $this->Input->get('id') && strlen($this->Input->post('title')) != 0)
+        {
+            $autoAlias = true;
+            $varValue  = standardize($this->Input->post('title'));
+        }
+        else if ($varValue == '')
         {
             $autoAlias = true;
             $varValue  = standardize($objPage->title);
