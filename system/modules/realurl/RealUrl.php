@@ -42,6 +42,12 @@ class RealUrl extends Frontend
      */
     public function findAlias(array $arrFragments)
     {
+        // See issues #10
+        foreach ($arrFragments as $key => $value)
+        {
+            $arrFragments[$key] = rawurldecode($value);
+        }
+        
         // Remove empty strings
         // Remove auto_item if found
         // Reset keys
