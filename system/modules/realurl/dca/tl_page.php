@@ -340,9 +340,20 @@ class tl_page_realurl extends tl_page
         // Search only in one language page tree        
         if ($GLOBALS['TL_CONFIG']['addLanguageToUrl'] == true)
         {
-            $objAlias = $this->Database
-                    ->prepare("SELECT id FROM tl_page WHERE (id=? OR alias=?) AND id IN(" . implode(", ", $this->getChildRecords(array($objPage->rootId), 'tl_page', false)) . ")")
+            $arrChildren = $this->getChildRecords(array($objPage->rootId), 'tl_page', false);
+						
+			if(count ($arrCildren) != 0)
+			{
+				 $objAlias = $this->Database
+                    ->prepare("SELECT id FROM tl_page WHERE (id=? OR alias=?) AND id IN(" . implode(", ", $arrChildren) . ")")
                     ->execute($dc->id, $varValue);
+			}
+			else
+			{
+				 $objAlias = $this->Database
+                    ->prepare("SELECT id FROM tl_page WHERE (id=? OR alias=?)")
+                    ->execute($dc->id, $varValue);
+			}
         }
         else
         {
