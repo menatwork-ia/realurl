@@ -1,7 +1,4 @@
-<?php
-
-if (!defined('TL_ROOT'))
-    die('You cannot access this file directly!');
+<?php if (!defined('TL_ROOT')) die('You cannot access this file directly!');
 
 /**
  * Contao Open Source CMS
@@ -41,6 +38,8 @@ class RealUrl extends Frontend
     // Vars
 
     protected $arrAliasMapper = array();
+    protected $arrRootMapper = array();
+    protected $arrSkipMapper = array();
 
     // Core
 
@@ -59,6 +58,26 @@ class RealUrl extends Frontend
     public function resetAliasMapper()
     {
         $this->arrAliasMapper = array();
+    }
+    
+    public function addRootMapper($intID, $blnUserRoot)
+    {
+        $this->arrRootMapper[$intID] = $blnUserRoot;
+    }
+    
+    public function restRootMapper()
+    {
+        $this->arrRootMapper = array();
+    }
+    
+     public function addSkipMapper($intID, $blnUserRoot)
+    {
+        $this->arrSkipMapper[$intID] = $blnUserRoot;
+    }
+    
+    public function restSkipMapper()
+    {
+        $this->arrSkipMapper = array();
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -121,6 +140,7 @@ class RealUrl extends Frontend
     ////////////////////////////////////////////////////////////////////////////
     // Backend Functions
     ////////////////////////////////////////////////////////////////////////////
+    
     // Regex -------------------------------------------------------------------
 
     /**
@@ -280,6 +300,7 @@ class RealUrl extends Frontend
 
         $strRealUrlOverwrite = "";
 
+        // Get the alias
         if (empty($varValue))
         {
             $varValue = explode("/", $objPage->alias);
@@ -306,7 +327,14 @@ class RealUrl extends Frontend
         }
 
         // Set state of use root alias
-        $blnUseRootAlias = $objRoot->useRootAlias;
+        if(key_exists($objRoot->id, $this->arrRootMapper))
+        {
+            $blnUseRootAlias = $this->arrRootMapper[$objRoot->id];
+        }
+        else
+        {
+             $blnUseRootAlias = $objRoot->useRootAlias;
+        }
 
         // Check if realurl is enabled
         if (!$objRoot->folderAlias)
@@ -399,7 +427,7 @@ class RealUrl extends Frontend
                             throw new Exception($GLOBALS['TL_LANG']['ERR']['noPageFound'], $objPage->id);
                         }
 
-                        if ($objValidParent->realurl_no_inheritance == 0 || $objValidParent->realurl_no_inheritance == '' || $objValidParent->type == 'root')
+                        if ( ($objValidParent->realurl_no_inheritance == 0 && !key_exists($objValidParent->id, $this->arrSkipMapper)) || $objValidParent->type == 'root')
                         {
                             break;
                         }

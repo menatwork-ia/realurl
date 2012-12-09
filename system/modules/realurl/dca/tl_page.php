@@ -57,6 +57,7 @@ foreach ($GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'] as $i
         break;
     }
 }
+$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['alwaysSave'] = true;
 
 $GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback'] = array('RealUrl', 'labelPage');
 
@@ -64,7 +65,7 @@ $GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback'] = array('RealUr
  * Palettes
  */
 $GLOBALS['TL_DCA']['tl_page']['palettes']['root'] .= ';{realurl_legend},folderAlias,subAlias,useRootAlias';
-$GLOBALS['TL_DCA']['tl_page']['palettes']['__selector__'][]       = 'realurl_overwrite';
+$GLOBALS['TL_DCA']['tl_page']['palettes']['__selector__'][] = 'realurl_overwrite';
 $GLOBALS['TL_DCA']['tl_page']['subpalettes']['realurl_overwrite'] = 'realurl_basealias';
 
 foreach ($GLOBALS['TL_DCA']['tl_page']['palettes'] as $keyPalette => $valuePalette)
@@ -78,56 +79,56 @@ foreach ($GLOBALS['TL_DCA']['tl_page']['palettes'] as $keyPalette => $valuePalet
 /**
  * Fields
  */
-$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['rgxp']       = 'folderurl';
+$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['rgxp'] = 'folderurl';
 $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['alwaysSave'] = true;
-$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['load_callback'][]    = array('tl_page_realurl', 'hideParentAlias');
+$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['load_callback'][] = array('tl_page_realurl', 'hideParentAlias');
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['folderAlias'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['folderAlias'],
+    'label' => &$GLOBALS['TL_LANG']['tl_page']['folderAlias'],
     'inputType' => 'checkbox',
-    'eval'      => array('tl_class' => 'w50'),
+    'eval' => array('tl_class' => 'w50'),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['subAlias'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['subAlias'],
+    'label' => &$GLOBALS['TL_LANG']['tl_page']['subAlias'],
     'inputType' => 'checkbox',
-    'eval'      => array('tl_class' => 'w50'),
+    'eval' => array('tl_class' => 'w50'),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['useRootAlias'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['useRootAlias'],
+    'label' => &$GLOBALS['TL_LANG']['tl_page']['useRootAlias'],
     'inputType' => 'checkbox',
-    'eval'      => array('tl_class' => 'w50'),
+    'eval' => array('tl_class' => 'w50'),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_no_inheritance'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance'],
+    'label' => &$GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance'],
     'inputType' => 'checkbox',
-    'eval'      => array(
-        'tl_class'  => 'w50',
+    'eval' => array(
+        'tl_class' => 'w50',
         'doNotCopy' => true
     ),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_overwrite'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_overwrite'],
+    'label' => &$GLOBALS['TL_LANG']['tl_page']['realurl_overwrite'],
     'inputType' => 'checkbox',
-    'eval'      => array(
+    'eval' => array(
         'submitOnChange' => true,
-        'tl_class'       => 'w50',
-        'doNotCopy'      => true
+        'tl_class' => 'w50',
+        'doNotCopy' => true
     ),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_basealias'] = array(
-    'label'         => &$GLOBALS['TL_LANG']['tl_page']['alias'],
-    'inputType'     => 'text',
+    'label' => &$GLOBALS['TL_LANG']['tl_page']['alias'],
+    'inputType' => 'text',
     'load_callback' => array(array('tl_page_realurl', 'loadFullAlias')),
     'eval' => array(
         'spaceToUnderscore' => true,
-        'trailingSlash'     => true,
-        'doNotCopy'         => true,
-        'tl_class'          => 'clr long'
+        'trailingSlash' => true,
+        'doNotCopy' => true,
+        'tl_class' => 'clr long'
     )
 );
 
@@ -166,11 +167,11 @@ class tl_page_realurl extends tl_page
             return;
         }
 
-        $arrAlias                = explode('/', $dc->activeRecord->alias);
+        $arrAlias = explode('/', $dc->activeRecord->alias);
         $dc->activeRecord->alias = array_pop($arrAlias);
 
         // Generate the alias
-        $blnActive      = false;
+        $blnActive = false;
         $objCurrentPage = $this->getPageDetails($dc->id);
 
         if ($objCurrentPage->type == "root")
@@ -180,7 +181,7 @@ class tl_page_realurl extends tl_page
         else
         {
             $objRootPage = $this->getPageDetails($objCurrentPage->rootId);
-            $blnActive   = $objRootPage->subAlias;
+            $blnActive = $objRootPage->subAlias;
         }
 
         // Check if the subalias is enabled
@@ -225,28 +226,47 @@ class tl_page_realurl extends tl_page
         }
 
         // Generate folder alias
-        $varValue = $this->objRealUrl->generateFolderAlias($dc->id, $varValue);
+        $varValue = $this->objRealUrl->generateFolderAlias($dc->id, $varValue, true);
 
-        // Check if realurl is enabled
+        // Check if realurl is enabled or better say, fallback
         if ($varValue == '' || $varValue == false)
         {
             return parent::generateAlias($varValue, $dc);
         }
 
+        // If root set some information, cause the database is not up to date -.-
+        if($dc->type == 'root')
+        {
+            $this->objRealUrl->addRootMapper($dc->id, $this->Input->post('useRootAlias'));
+        }    
+        
+        // Bugfix, because db is not up to date
+        $this->objRealUrl->addSkipMapper($dc->id, $this->Input->post('realurl_no_inheritance'));
         $this->objRealUrl->addAliasMapper($dc->id, $varValue);
-
+                 
+        // Get all childs and update these aliases
         foreach ($this->getChildRecords(array($dc->id), 'tl_page', true) as $value)
         {
-            $mixSubAlias =$this->objRealUrl->generateFolderAlias($value);
-
-            if ($mixSubAlias != false)
+            // If we have an error exit here
+            try
             {
-                $this->Database->prepare('UPDATE tl_page %s WHERE id=?')
-                        ->set(array('alias' => $mixSubAlias))
-                        ->executeUncached($value);
+                $mixSubAlias = $this->objRealUrl->generateFolderAlias($value);
+               
+                if ($mixSubAlias != false)
+                {
+                    $this->Database->prepare('UPDATE tl_page %s WHERE id=?')
+                            ->set(array('alias' => $mixSubAlias))
+                            ->executeUncached($value);
+                }
+            }
+            catch (Exception $exc)
+            {
+                $_SESSION['TL_ERROR'][] = $exc->getMessage();
+                break;
             }
         }
 
+        // Return the current
         return $varValue;
     }
 
@@ -268,7 +288,7 @@ class tl_page_realurl extends tl_page
         if ($objRoot->folderAlias)
         {
             $arrFolders = trimsplit("/", $varValue);
-            $varValue   = array_pop($arrFolders);
+            $varValue = array_pop($arrFolders);
         }
 
         return $varValue;
@@ -371,9 +391,9 @@ class tl_page_realurl extends tl_page
                 }
 
                 $arrFolders = trimsplit("/", $objChildren->alias);
-                $strAlias   = array_pop($arrFolders);
-                $strAlias   = $this->generateFolderAlias($strAlias, (object) array(
-                            'id'           => $objChildren->id,
+                $strAlias = array_pop($arrFolders);
+                $strAlias = $this->generateFolderAlias($strAlias, (object) array(
+                            'id' => $objChildren->id,
                             'activeRecord' => $objChildren), $useExtException);
 
                 $this->Database
