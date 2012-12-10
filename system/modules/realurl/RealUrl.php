@@ -1,4 +1,7 @@
-<?php if (!defined('TL_ROOT')) die('You cannot access this file directly!');
+<?php
+
+if (!defined('TL_ROOT'))
+    die('You cannot access this file directly!');
 
 /**
  * Contao Open Source CMS
@@ -29,26 +32,26 @@
  * @license    http://opensource.org/licenses/lgpl-3.0.html
  * @version    $Id$
  */
-class RealUrl extends Frontend
+class RealUrl extends Backend
 {
 
     ////////////////////////////////////////////////////////////////////////////
     // Core Functions
     ////////////////////////////////////////////////////////////////////////////
-    // Vars
+    // Vars --------------------------------------------------------------------
 
     protected $arrAliasMapper = array();
     protected $arrRootMapper = array();
     protected $arrSkipMapper = array();
 
-    // Core
+    // Core --------------------------------------------------------------------
 
     public function __construct()
     {
         parent::__construct();
     }
 
-    // Getter / Setter
+    // Getter / Setter ---------------------------------------------------------
 
     public function addAliasMapper($intID, $strAlias)
     {
@@ -59,22 +62,22 @@ class RealUrl extends Frontend
     {
         $this->arrAliasMapper = array();
     }
-    
+
     public function addRootMapper($intID, $blnUserRoot)
     {
         $this->arrRootMapper[$intID] = $blnUserRoot;
     }
-    
+
     public function restRootMapper()
     {
         $this->arrRootMapper = array();
     }
-    
-     public function addSkipMapper($intID, $blnUserRoot)
+
+    public function addSkipMapper($intID, $blnUserRoot)
     {
         $this->arrSkipMapper[$intID] = $blnUserRoot;
     }
-    
+
     public function restSkipMapper()
     {
         $this->arrSkipMapper = array();
@@ -140,12 +143,66 @@ class RealUrl extends Frontend
     ////////////////////////////////////////////////////////////////////////////
     // Backend Functions
     ////////////////////////////////////////////////////////////////////////////
-    
+    // Global operations -------------------------------------------------------
+
+    /**
+     * Add a new global button for show/hide alias
+     * 
+     * @param type $strHref
+     * @param type $strLabel
+     * @param type $strTitle
+     * @param type $strClass
+     * @param type $strAttributes
+     * @param type $strTable
+     * @param type $intRoot
+     * 
+     * @return string
+     */
+    public function bttShowAlias($strHref, $strLabel, $strTitle, $strClass, $strAttributes, $strTable, $intRoot)
+    {
+        if ($this->Session->get('realurl_showAlias'))
+        {
+            $strLabel = $GLOBALS['TL_LANG']['tl_page']['realurl']['aliasHide'][0];
+            $strTitle = $GLOBALS['TL_LANG']['tl_page']['realurl']['aliasHide'][1];
+            $blnState = 0;
+        }
+        else
+        {
+            $strLabel = $GLOBALS['TL_LANG']['tl_page']['realurl']['aliasShow'][0];
+            $strTitle = $GLOBALS['TL_LANG']['tl_page']['realurl']['aliasShow'][1];
+            $blnState = 1;
+        }
+
+        return vsprintf('%s<a href="%s" class="%s" title="%s"%s>%s</a> ', array(
+                    $this->User->isAdmin ? '<br/><br/>' : ' &#160; :: &#160; ',
+                    $this->addToUrl($strHref . '&amp;state=' . $blnState),
+                    $strClass,
+                    specialchars($strTitle),
+                    $strAttributes,
+                    $strLabel
+                ));
+    }
+
+    // Global operations function ----------------------------------------------
+
+    /**
+     * Callback for global operation - bttShowAlias
+     */
+    public function keyAlias()
+    {
+        // Save in state in Session
+        $this->Session->set('realurl_showAlias', $this->Input->get('state'));
+
+        // Redirect
+        $this->redirect($this->getReferer());
+    }
+
     // Regex -------------------------------------------------------------------
 
     /**
      * Validate a folderurl alias.
-     * The validation is identical to the regular "alnum" except that it also allows for slashes (/).
+     * The validation is identical to the regular "alnum" except 
+     * that it also allows for slashes (/).
      *
      * @param	string
      * @param	mixed
@@ -272,7 +329,55 @@ class RealUrl extends Frontend
 
     public function regenerateAllAliases()
     {
-        return;
+        $objRootPages = $this->Database
+                ->prepare('SELECT * FROM tl_page WHERE type="root" AND folderAlias=1')
+                ->executeUncached();
+
+        while ($objRootPages->next())
+        {
+            // If we have an error exit here
+            try
+            {
+                $mixAlias = $this->generateFolderAlias($objRootPages->id);
+
+                // Add to array, because getPageDetails uses a cached db result
+                $this->addAliasMapper($objRootPages->id, $mixAlias);
+
+                // Update Alias
+                if ($mixAlias != false)
+                {
+                    $this->Database->prepare('UPDATE tl_page %s WHERE id=?')
+                            ->set(array('alias' => $mixAlias))
+                            ->executeUncached($objRootPages->id);
+                }
+
+                if ($mixAlias != false)
+                {
+                    $arrPages = $this->getChildRecords(array($objRootPages->id), 'tl_page');
+
+                    foreach ($arrPages as $subValue)
+                    {
+                        $mixAlias = $this->generateFolderAlias($subValue);
+
+                        // Update Alias
+                        if ($mixAlias != false)
+                        {
+                            // Add to array, because getPageDetails uses a cached db result
+                            $this->addAliasMapper($$subValue, $mixAlias);
+                            
+                            $this->Database->prepare('UPDATE tl_page %s WHERE id=?')
+                                    ->set(array('alias' => $mixAlias))
+                                    ->executeUncached($subValue);
+                        }
+                    }
+                }
+            }
+            catch (Exception $exc)
+            {
+                $_SESSION['TL_ERROR'][] = $exc->getMessage();
+                break;
+            }
+        }
     }
 
     /**
@@ -319,21 +424,25 @@ class RealUrl extends Frontend
             $objRoot   = $this->getPageDetails($objPage->rootId);
             $objParent = $this->getPageDetails($objPage->pid);
 
-            // Get state of no inheritance
-            if ($objParent->realurl_no_inheritance == 1)
+            // Get state of no inheritance from cache or database
+            if (key_exists($objParent->id, $this->arrSkipMapper))
+            {
+                $blnNoParentAlias = $this->arrSkipMapper[$objParent->id];
+            }
+            else if ($objParent->realurl_no_inheritance == 1)
             {
                 $blnNoParentAlias = true;
             }
         }
 
         // Set state of use root alias
-        if(key_exists($objRoot->id, $this->arrRootMapper))
+        if (key_exists($objRoot->id, $this->arrRootMapper))
         {
             $blnUseRootAlias = $this->arrRootMapper[$objRoot->id];
         }
         else
         {
-             $blnUseRootAlias = $objRoot->useRootAlias;
+            $blnUseRootAlias = $objRoot->useRootAlias;
         }
 
         // Check if realurl is enabled
@@ -427,7 +536,7 @@ class RealUrl extends Frontend
                             throw new Exception($GLOBALS['TL_LANG']['ERR']['noPageFound'], $objPage->id);
                         }
 
-                        if ( ($objValidParent->realurl_no_inheritance == 0 && !key_exists($objValidParent->id, $this->arrSkipMapper)) || $objValidParent->type == 'root')
+                        if (($objValidParent->realurl_no_inheritance == 0 && !key_exists($objValidParent->id, $this->arrSkipMapper)) || $objValidParent->type == 'root')
                         {
                             break;
                         }
@@ -609,6 +718,11 @@ class RealUrl extends Frontend
             $label = $this->$value[0]->$value[1]($row, $label, $dc, $imageAttribute, $blnReturnImage, $blnProtected);
         }
 
+        if ($this->Session->get('realurl_showAlias') == 0)
+        {
+            return $label;
+        }
+
         // Get the alias
         $strAlias = $row['alias'];
 
@@ -617,7 +731,6 @@ class RealUrl extends Frontend
             return $label;
         }
 
-        // $GLOBALS['TL_CONFIG']['addLanguageToUrl']
         if ($GLOBALS['TL_CONFIG']['addLanguageToUrl'])
         {
             if ($row['type'] == 'root')
@@ -651,7 +764,7 @@ class RealUrl extends Frontend
         $strLableAlias .= '<span style="color:#d98f46;">' . $strPageTitle . '</span>';
         $strLableAlias .= ']</span>';
 
-        //$strLableAlias .= $this->getLablePicture($row);
+        $strLableAlias .= $this->getLablePicture($row);
 
         return $label . $strLableAlias;
     }

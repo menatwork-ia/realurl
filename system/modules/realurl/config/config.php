@@ -26,13 +26,18 @@
  * @license    http://opensource.org/licenses/lgpl-3.0.html
  * @version    $Id$
  */
- 
- 
+  
 /**
  * Hooks
  */
 $GLOBALS['TL_HOOKS']['addCustomRegexp'][]       = array('RealUrl', 'validateRegexp');
 $GLOBALS['TL_HOOKS']['getPageIdFromUrl'][]      = array('RealUrl', 'findAlias');
+
+/**
+ * Functions
+ */
+
+$GLOBALS['BE_MOD']['design']['page']['realurl_showAlias'] = array('RealUrl', 'keyAlias');
 
 /**
  * URL Keywords
@@ -52,7 +57,7 @@ $GLOBALS['TL_MAINTENANCE'][] = 'RealUrlMaintenance';
  * CSS/JS files
  */
 $objInput = Input::getInstance();
-if ($objInput->get("do") == 'maintenance')
+if ($objInput->get('do') == 'page')
 {
-    $GLOBALS['TL_CSS'][] = 'system/modules/realurl/html/css/maintenance.css';
+    $GLOBALS['TL_CSS'][] = 'system/modules/realurl/html/css/realurl.css';
 }

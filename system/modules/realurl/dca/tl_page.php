@@ -1,7 +1,4 @@
-<?php
-
-if (!defined('TL_ROOT'))
-    die('You cannot access this file directly!');
+<?php if (!defined('TL_ROOT')) die('You cannot access this file directly!');
 
 /**
  * Contao Open Source CMS
@@ -31,9 +28,11 @@ if (!defined('TL_ROOT'))
  * @license    http://opensource.org/licenses/lgpl-3.0.html
  * @version    $Id$
  */
+
 /**
  * callback / core callbacks overwrite
  */
+
 // On Submit
 array_insert($GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'], 0, array(array('tl_page_realurl', 'verifyAliases')));
 
@@ -48,6 +47,7 @@ foreach ($GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'] as $i => $
 
 $GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'][] = array('RealUrl', 'createAliasList');
 //$GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'][] = array('RealUrl', 'foobaa');
+
 // Save
 foreach ($GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'] as $i => $arrCallback)
 {
@@ -60,6 +60,17 @@ foreach ($GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'] as $i
 $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['alwaysSave'] = true;
 
 $GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback'] = array('RealUrl', 'labelPage');
+
+/**
+ * Global operations
+ */
+
+$GLOBALS['TL_DCA']['tl_page']['list']['global_operations']['realurl_showAlias'] = array(
+    'label'           => &$GLOBALS['TL_LANG']['tl_page']['realurl']['showAlias'],
+    'href'            => 'key=realurl_showAlias',
+    'class'           => 'alias_toggle',
+    'button_callback' => array('RealUrl', 'bttShowAlias'),
+);
 
 /**
  * Palettes
@@ -212,12 +223,11 @@ class tl_page_realurl extends tl_page
      * 
      * @param	mixed
      * @param	DataContainer
-     * @param   boolean $useExtException If true an extended error message, with id, link and some more information, will be returned.
      * @return	mixed
      * @link	http://www.contao.org/callbacks.html#save_callback
      * @version 2.0
      */
-    public function generateFolderAlias($varValue, $dc, $useExtException = false)
+    public function generateFolderAlias($varValue, $dc)
     {
         // If empty recreate the alias
         if (empty($varValue))
@@ -233,13 +243,15 @@ class tl_page_realurl extends tl_page
         {
             return parent::generateAlias($varValue, $dc);
         }
+        
+        $objPage = $this->getPageDetails($dc->id);
 
         // If root set some information, cause the database is not up to date -.-
-        if($dc->type == 'root')
+        if($objPage->type == 'root')
         {
             $this->objRealUrl->addRootMapper($dc->id, $this->Input->post('useRootAlias'));
         }    
-        
+              
         // Bugfix, because db is not up to date
         $this->objRealUrl->addSkipMapper($dc->id, $this->Input->post('realurl_no_inheritance'));
         $this->objRealUrl->addAliasMapper($dc->id, $varValue);
@@ -251,6 +263,9 @@ class tl_page_realurl extends tl_page
             try
             {
                 $mixSubAlias = $this->objRealUrl->generateFolderAlias($value);
+                                
+                // Add to array, because getPageDetails uses a cached db result
+                $this->objRealUrl->addAliasMapper($value, $mixSubAlias);
                
                 if ($mixSubAlias != false)
                 {
@@ -265,7 +280,7 @@ class tl_page_realurl extends tl_page
                 break;
             }
         }
-
+        
         // Return the current
         return $varValue;
     }
@@ -404,5 +419,4 @@ class tl_page_realurl extends tl_page
             }
         }
     }
-
 }

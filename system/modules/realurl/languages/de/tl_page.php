@@ -40,3 +40,9 @@ $GLOBALS['TL_LANG']['tl_page']['subAlias']		            = array('Alias von Unter
 $GLOBALS['TL_LANG']['tl_page']['useRootAlias']              = array('Alias des Startpunkts verwenden', 'Verwendet den Alias des Startpunkts als Basis für alle anderen Seiten.');
 $GLOBALS['TL_LANG']['tl_page']['realurl_overwrite']	        = array('Alias überschreiben', 'Klicken Sie hier, um den gesamten Alias zurückzusetzen.');
 $GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance']    = array('Alias nicht an Unterseiten vererben', 'Klicken Sie hier, wenn der Alias dieser Seite nicht an Unterseiten vererbt werden soll.');
+
+/**
+ * Miscellaneous
+ */
+$GLOBALS['TL_LANG']['tl_page']['realurl']['aliasShow']      = array('Alias anzeigen  ', 'Zeigt den vollen Seitenalias hinter dem Seitentitel an.');
+$GLOBALS['TL_LANG']['tl_page']['realurl']['aliasHide']      = array('Alias verstecken', 'Versteckt den vollen Seitenalias.');
