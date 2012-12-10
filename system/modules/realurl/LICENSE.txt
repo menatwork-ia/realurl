@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Package    	realurl Extension
  * Copyright  	MEN AT WORK 2012
  * Author       Andreas Isaak <cms@men-at-work.de>, Stefan Heimes <cms@men-at-work.de>
@@ -6,6 +6,10 @@
  * License    	GNU/LGPL
  */
  
+/**
+ * Special thanks to backboneIT (backbone), for the creative ideas.
+ */
+
 /**
  * Package    	Icons
  * Copyright  	Yusuke Kamiyamane
