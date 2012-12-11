@@ -33,6 +33,9 @@
  * callback / core callbacks overwrite
  */
 
+// Labels
+$GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback'] = array('RealUrl', 'labelPage');
+
 // On Submit
 array_insert($GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'], 0, array(array('tl_page_realurl', 'verifyAliases')));
 
@@ -46,7 +49,13 @@ foreach ($GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'] as $i => $
 }
 
 $GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'][] = array('RealUrl', 'createAliasList');
-//$GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'][] = array('RealUrl', 'foobaa');
+
+$arrConfig = &$GLOBALS['TL_DCA']['tl_page']['config'];
+foreach(array('onrestore', 'oncopy', 'oncut') as $strCallback) {
+	$strKey = $strCallback . '_callback';
+	$arrConfig[$strKey] = (array) $arrConfig[$strKey];
+	array_unshift($arrConfig[$strKey], array('RealUrl', $strCallback . 'Page'));
+}
 
 // Save
 foreach ($GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'] as $i => $arrCallback)
@@ -59,8 +68,6 @@ foreach ($GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'] as $i
 }
 $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['alwaysSave'] = true;
 
-$GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback'] = array('RealUrl', 'labelPage');
-
 /**
  * Global operations
  */
@@ -68,8 +75,15 @@ $GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback'] = array('RealUr
 $GLOBALS['TL_DCA']['tl_page']['list']['global_operations']['realurl_showAlias'] = array(
     'label'           => &$GLOBALS['TL_LANG']['tl_page']['realurl']['showAlias'],
     'href'            => 'key=realurl_showAlias',
-    'class'           => 'alias_toggle',
+    'class'           => 'relaurl_alias_toggle',
     'button_callback' => array('RealUrl', 'bttShowAlias'),
+);
+
+$GLOBALS['TL_DCA']['tl_page']['list']['global_operations']['realurl_Regenerate'] = array(
+    'label'           => &$GLOBALS['TL_LANG']['tl_page']['realurl']['regenerate'],
+    'href'            => 'key=realurl_regenerate',
+    'class'           => 'relaurl_regenerate',
+    'button_callback' => array('RealUrl', 'bttRegenerate'),
 );
 
 /**

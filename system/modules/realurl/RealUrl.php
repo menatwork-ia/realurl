@@ -1,7 +1,4 @@
-<?php
-
-if (!defined('TL_ROOT'))
-    die('You cannot access this file directly!');
+<?php if (!defined('TL_ROOT')) die('You cannot access this file directly!');
 
 /**
  * Contao Open Source CMS
@@ -38,6 +35,7 @@ class RealUrl extends Backend
     ////////////////////////////////////////////////////////////////////////////
     // Core Functions
     ////////////////////////////////////////////////////////////////////////////
+    
     // Vars --------------------------------------------------------------------
 
     protected $arrAliasMapper = array();
@@ -135,6 +133,12 @@ class RealUrl extends Backend
         return $arrFiltered;
     }
 
+    /**
+     * Filter functions
+     * 
+     * @param string $strFragment
+     * @return boolean
+     */
     public static function fragmentFilter($strFragment)
     {
         return strlen($strFragment) && $strFragment != 'auto_item';
@@ -143,6 +147,7 @@ class RealUrl extends Backend
     ////////////////////////////////////////////////////////////////////////////
     // Backend Functions
     ////////////////////////////////////////////////////////////////////////////
+    
     // Global operations -------------------------------------------------------
 
     /**
@@ -174,8 +179,36 @@ class RealUrl extends Backend
         }
 
         return vsprintf('%s<a href="%s" class="%s" title="%s"%s>%s</a> ', array(
-                    $this->User->isAdmin ? '<br/><br/>' : ' &#160; :: &#160; ',
+                    //$this->User->isAdmin ? '<br/><br/>' : ' &#160; :: &#160; ',
+                    '<br/><br/>',
                     $this->addToUrl($strHref . '&amp;state=' . $blnState),
+                    $strClass,
+                    specialchars($strTitle),
+                    $strAttributes,
+                    $strLabel
+                ));
+    }
+
+    /**
+     * Add a new button for regenerate all aliases
+     * 
+     * @param type $strHref
+     * @param type $strLabel
+     * @param type $strTitle
+     * @param type $strClass
+     * @param type $strAttributes
+     * @param type $strTable
+     * @param type $intRoot
+     * @return string
+     */
+    public function bttRegenerate($strHref, $strLabel, $strTitle, $strClass, $strAttributes, $strTable, $intRoot)
+    {
+        // ToDo check user prem
+        // $this->User->isAdmin
+        
+        return vsprintf('%s<a href="%s" class="%s" title="%s"%s>%s</a> ', array(
+                    ' &#160; :: &#160; ',
+                    $this->addToUrl($strHref),
                     $strClass,
                     specialchars($strTitle),
                     $strAttributes,
@@ -195,6 +228,38 @@ class RealUrl extends Backend
 
         // Redirect
         $this->redirect($this->getReferer());
+    }
+
+    /**
+     * Callback for global operation - bttRegenerate
+     */
+    public function keyRegenerate()
+    {
+        // reate all aliases
+        $this->regenerateAllAliases();
+        
+        // Redirect
+        $this->redirect($this->getReferer());
+    }
+    
+    // Mode callbacks ----------------------------------------------------------
+
+    public function oncopyPage($intID)
+    {
+        // reate all aliases
+        $this->regenerateAllAliases();
+    }
+
+    public function oncutPage($objDC)
+    {
+        // reate all aliases
+        $this->regenerateAllAliases();
+    }
+
+    public function onrestorePage($intID)
+    {
+        // reate all aliases
+        $this->regenerateAllAliases();
     }
 
     // Regex -------------------------------------------------------------------
@@ -254,18 +319,30 @@ class RealUrl extends Backend
         $arrLists = array();
 
         $objAlias = $this->Database
-                ->prepare("SELECT alias FROM tl_page")
+                ->prepare("SELECT id, alias FROM tl_page")
                 ->execute();
 
         while ($objAlias->next())
         {
-            if (stripos($objAlias->alias, "/") === false)
+            $strAlias = '';
+            
+            // Use cache or db
+            if(key_exists($objAlias->id, $this->arrAliasMapper))
             {
-                $arrLists[$objAlias->alias] = true;
+                $strAlias = $this->arrAliasMapper[$objAlias->id];
             }
             else
             {
-                foreach (trimsplit("/", $objAlias->alias) as $value)
+                $strAlias = $objAlias->alias;
+            }
+            
+            if (stripos($strAlias, "/") === false)
+            {
+                $arrLists[$strAlias] = true;
+            }
+            else
+            {
+                foreach (trimsplit("/", $strAlias) as $value)
                 {
                     $arrLists[$value] = true;
                 }
@@ -276,55 +353,6 @@ class RealUrl extends Backend
         $this->Database
                 ->prepare("INSERT INTO tl_realurl_aliases (alias) VALUES ('" . implode("'),\n('", array_keys($arrLists)) . "')")
                 ->execute();
-    }
-
-    public function foobaa($dc)
-    {
-        // Return if there is no active record (override all)
-        if (!$dc->activeRecord)
-        {
-            $this->regenerateAllAliases();
-        }
-
-        // Array with pages
-        $arrKnownId = array();
-
-        // Generate the current record alias
-        $mixAlias = $this->generateFolderAlias($dc->id);
-
-        if ($mixAlias != false)
-        {
-            // Set as allready done
-            $arrKnownId[$dc->id];
-
-            // Update alias 
-            $this->Database->prepare('UPDATE tl_page %s WHERE id=?')
-                    ->set(array('alias' => $mixAlias))
-                    ->executeUncached($dc->id);
-        }
-
-        if ($mixAlias != false)
-        {
-            // Create the aliases for all sub pages
-            foreach ($this->getChildRecords($dc->id, 'tl_page') as $value)
-            {
-                if (in_array($value, $arrKnownId))
-                {
-                    continue;
-                }
-
-                $arrKnownId[$value];
-
-                $mixSubAlias = $this->generateFolderAlias($value);
-
-                if ($mixSubAlias != false)
-                {
-                    $this->Database->prepare('UPDATE tl_page %s WHERE id=?')
-                            ->set(array('alias' => $mixSubAlias))
-                            ->executeUncached($value);
-                }
-            }
-        }
     }
 
     public function regenerateAllAliases()
@@ -354,16 +382,17 @@ class RealUrl extends Backend
                 if ($mixAlias != false)
                 {
                     $arrPages = $this->getChildRecords(array($objRootPages->id), 'tl_page');
-
+                    
                     foreach ($arrPages as $subValue)
                     {
+                        // Add to array, because getPageDetails uses a cached db result
                         $mixAlias = $this->generateFolderAlias($subValue);
 
                         // Update Alias
                         if ($mixAlias != false)
                         {
                             // Add to array, because getPageDetails uses a cached db result
-                            $this->addAliasMapper($$subValue, $mixAlias);
+                            $this->addAliasMapper($subValue, $mixAlias);
                             
                             $this->Database->prepare('UPDATE tl_page %s WHERE id=?')
                                     ->set(array('alias' => $mixAlias))
@@ -764,51 +793,7 @@ class RealUrl extends Backend
         $strLableAlias .= '<span style="color:#d98f46;">' . $strPageTitle . '</span>';
         $strLableAlias .= ']</span>';
 
-        $strLableAlias .= $this->getLablePicture($row);
-
         return $label . $strLableAlias;
-    }
-
-    /**
-     * Get the icon for a special node.
-     * 
-     * @param type $row
-     * @return type
-     */
-    protected function getLablePicture($row)
-    {
-        $strImageTag = '  <img src="system/modules/realurl/html/img/%s" alt="%s" />';
-        $strReturn   = '';
-
-        // Root page
-        if ($row['type'] == 'root')
-        {
-            // Generate options
-            if (empty($row['folderAlias']))
-            {
-                $strReturn .= sprintf($strImageTag, 'node.png', 'Keine Vererbung aktiviert.');
-            }
-            else
-            {
-                // Use alias from root page
-                if (empty($row['useRootAlias']))
-                {
-                    $strReturn .= sprintf($strImageTag, 'node-select-child.png', 'Vererbung aktiviert, ohne Rootseite');
-                }
-                else
-                {
-                    $strReturn .= sprintf($strImageTag, 'node-select-all.png', 'Keine Verrebung aktiviert, mit Rootseite.');
-                }
-
-                // Auto update options
-                if (!empty($row['subAlias']))
-                {
-                    $strReturn .= sprintf($strImageTag, 'node-design', 'Aliases von Unterseiten aktualisieren.');
-                }
-            }
-        }
-
-        return $strReturn;
     }
 
 }
