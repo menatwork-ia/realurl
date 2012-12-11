@@ -46,3 +46,4 @@ $GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance']    = array('Alias nicht
  */
 $GLOBALS['TL_LANG']['tl_page']['realurl']['aliasShow']      = array('Alias anzeigen  ', 'Zeigt den vollen Seitenalias hinter dem Seitentitel an.');
 $GLOBALS['TL_LANG']['tl_page']['realurl']['aliasHide']      = array('Alias verstecken', 'Versteckt den vollen Seitenalias.');
+$GLOBALS['TL_LANG']['tl_page']['realurl']['regenerate']     = array('Alias neu erstellen', 'Erstellt für jeden Teilbaum den Alias neu, so fern realurl aktiviert ist.');
