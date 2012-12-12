@@ -1,0 +1,15 @@
+.relaurl_alias_toggle,
+.relaurl_regenerate {
+    padding: 2px 0 3px 20px;
+    background-position: left center;
+    background-repeat: no-repeat;
+}
+
+.relaurl_alias_toggle {
+    background: url("../../../../system/themes/default/images/visible.gif") no-repeat left center;
+}
+
+.relaurl_regenerate {
+    background: url("../../../../system/themes/default/images/reload.gif") no-repeat left center;
+}
+

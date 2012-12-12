@@ -28,9 +28,15 @@
  * @license    http://opensource.org/licenses/lgpl-3.0.html
  * @version    $Id$
  */
+
 /**
- * Replace core callbacks
+ * callback / core callbacks overwrite
  */
+
+// Labels
+$GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback'] = array('RealUrl', 'labelPage');
+
+// On Submit
 array_insert($GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'], 0, array(array('tl_page_realurl', 'verifyAliases')));
 
 foreach ($GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'] as $i => $arrCallback)
@@ -42,6 +48,16 @@ foreach ($GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'] as $i => $
     }
 }
 
+$GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'][] = array('RealUrl', 'createAliasList');
+
+$arrConfig = &$GLOBALS['TL_DCA']['tl_page']['config'];
+foreach(array('onrestore', 'oncopy', 'oncut') as $strCallback) {
+	$strKey = $strCallback . '_callback';
+	$arrConfig[$strKey] = (array) $arrConfig[$strKey];
+	array_unshift($arrConfig[$strKey], array('RealUrl', $strCallback . 'Page'));
+}
+
+// Save
 foreach ($GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'] as $i => $arrCallback)
 {
     if ($arrCallback[1] == 'generateAlias')
@@ -50,14 +66,31 @@ foreach ($GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'] as $i
         break;
     }
 }
+$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['alwaysSave'] = true;
 
-$GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'][] = array('tl_page_realurl', 'createAliasList');
+/**
+ * Global operations
+ */
+
+$GLOBALS['TL_DCA']['tl_page']['list']['global_operations']['realurl_showAlias'] = array(
+    'label'           => &$GLOBALS['TL_LANG']['tl_page']['realurl']['showAlias'],
+    'href'            => 'key=realurl_showAlias',
+    'class'           => 'relaurl_alias_toggle',
+    'button_callback' => array('RealUrl', 'bttShowAlias'),
+);
+
+$GLOBALS['TL_DCA']['tl_page']['list']['global_operations']['realurl_Regenerate'] = array(
+    'label'           => &$GLOBALS['TL_LANG']['tl_page']['realurl']['regenerate'],
+    'href'            => 'key=realurl_regenerate',
+    'class'           => 'relaurl_regenerate',
+    'button_callback' => array('RealUrl', 'bttRegenerate'),
+);
 
 /**
  * Palettes
  */
 $GLOBALS['TL_DCA']['tl_page']['palettes']['root'] .= ';{realurl_legend},folderAlias,subAlias,useRootAlias';
-$GLOBALS['TL_DCA']['tl_page']['palettes']['__selector__'][]       = 'realurl_overwrite';
+$GLOBALS['TL_DCA']['tl_page']['palettes']['__selector__'][] = 'realurl_overwrite';
 $GLOBALS['TL_DCA']['tl_page']['subpalettes']['realurl_overwrite'] = 'realurl_basealias';
 
 foreach ($GLOBALS['TL_DCA']['tl_page']['palettes'] as $keyPalette => $valuePalette)
@@ -71,56 +104,56 @@ foreach ($GLOBALS['TL_DCA']['tl_page']['palettes'] as $keyPalette => $valuePalet
 /**
  * Fields
  */
-$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['rgxp']       = 'folderurl';
+$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['rgxp'] = 'folderurl';
 $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['alwaysSave'] = true;
-$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['load_callback'][]    = array('tl_page_realurl', 'hideParentAlias');
+$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['load_callback'][] = array('tl_page_realurl', 'hideParentAlias');
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['folderAlias'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['folderAlias'],
+    'label' => &$GLOBALS['TL_LANG']['tl_page']['folderAlias'],
     'inputType' => 'checkbox',
-    'eval'      => array('tl_class' => 'w50'),
+    'eval' => array('tl_class' => 'w50'),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['subAlias'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['subAlias'],
+    'label' => &$GLOBALS['TL_LANG']['tl_page']['subAlias'],
     'inputType' => 'checkbox',
-    'eval'      => array('tl_class' => 'w50'),
+    'eval' => array('tl_class' => 'w50'),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['useRootAlias'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['useRootAlias'],
+    'label' => &$GLOBALS['TL_LANG']['tl_page']['useRootAlias'],
     'inputType' => 'checkbox',
-    'eval'      => array('tl_class' => 'w50'),
+    'eval' => array('tl_class' => 'w50'),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_no_inheritance'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance'],
+    'label' => &$GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance'],
     'inputType' => 'checkbox',
-    'eval'      => array(
-        'tl_class'  => 'w50',
+    'eval' => array(
+        'tl_class' => 'w50',
         'doNotCopy' => true
     ),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_overwrite'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_overwrite'],
+    'label' => &$GLOBALS['TL_LANG']['tl_page']['realurl_overwrite'],
     'inputType' => 'checkbox',
-    'eval'      => array(
+    'eval' => array(
         'submitOnChange' => true,
-        'tl_class'       => 'w50',
-        'doNotCopy'      => true
+        'tl_class' => 'w50',
+        'doNotCopy' => true
     ),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_basealias'] = array(
-    'label'         => &$GLOBALS['TL_LANG']['tl_page']['alias'],
-    'inputType'     => 'text',
+    'label' => &$GLOBALS['TL_LANG']['tl_page']['alias'],
+    'inputType' => 'text',
     'load_callback' => array(array('tl_page_realurl', 'loadFullAlias')),
     'eval' => array(
         'spaceToUnderscore' => true,
-        'trailingSlash'     => true,
-        'doNotCopy'         => true,
-        'tl_class'          => 'clr long'
+        'trailingSlash' => true,
+        'doNotCopy' => true,
+        'tl_class' => 'clr long'
     )
 );
 
@@ -129,6 +162,19 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_basealias'] = array(
  */
 class tl_page_realurl extends tl_page
 {
+
+    // Core --------------------------------------------------------------------
+
+    protected $objRealUrl;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->objRealUrl = new RealUrl();
+    }
+
+    // Alias -------------------------------------------------------------------
 
     /**
      * Only use the last portion of the page alias for the article alias
@@ -146,8 +192,28 @@ class tl_page_realurl extends tl_page
             return;
         }
 
-        $arrAlias                = explode('/', $dc->activeRecord->alias);
+        $arrAlias = explode('/', $dc->activeRecord->alias);
         $dc->activeRecord->alias = array_pop($arrAlias);
+
+        // Generate the alias
+        $blnActive = false;
+        $objCurrentPage = $this->getPageDetails($dc->id);
+
+        if ($objCurrentPage->type == "root")
+        {
+            $blnActive = $objCurrentPage->subAlias;
+        }
+        else
+        {
+            $objRootPage = $this->getPageDetails($objCurrentPage->rootId);
+            $blnActive = $objRootPage->subAlias;
+        }
+
+        // Check if the subalias is enabled
+        if ($blnActive)
+        {
+            $this->generateAliasRecursive($dc->id, true);
+        }
 
         parent::generateArticle($dc);
     }
@@ -171,235 +237,65 @@ class tl_page_realurl extends tl_page
      * 
      * @param	mixed
      * @param	DataContainer
-     * @param   boolean $useExtException If true an extended error message, with id, link and some more information, will be returned.
      * @return	mixed
      * @link	http://www.contao.org/callbacks.html#save_callback
      * @version 2.0
      */
-    public function generateFolderAlias($varValue, $dc, $useExtException = false)
+    public function generateFolderAlias($varValue, $dc)
     {
-        // Init some Vars
-        $objPage   = $this->getPageDetails($dc->id);
-        $objRoot   = null;
-        $objParent = null;
-
-        $blnNoParentAlias    = false;
-        $blnIsRoot           = false;
-        $blnUseRootAlias     = false;
-        $blnRealUrlOverwrite = false;
-        $autoAlias           = false;
-
-        $strRealUrlOverwrite = "";
-
-        // Load root page
-        if ($objPage->type == 'root')
+        // If empty recreate the alias
+        if (empty($varValue))
         {
-            $objRoot   = $objPage;
-            $blnIsRoot = true;
-        }
-        else
-        {
-            // Get root/parent page
-            $objRoot   = $this->getPageDetails($objPage->rootId);
-            $objParent = $this->getPageDetails($objPage->pid);
-
-            // Get state of no inheritance
-            if ($objParent->realurl_no_inheritance == 1)
-            {
-                $blnNoParentAlias = true;
-            }
+            $varValue = parent::generateAlias($varValue, $dc);
         }
 
-        // Set state of use root alias
-        $blnUseRootAlias = $objRoot->useRootAlias;
+        // Generate folder alias
+        $varValue = $this->objRealUrl->generateFolderAlias($dc->id, $varValue, true);
 
-        // Check if realurl is enabled
-        if (!$objRoot->folderAlias)
+        // Check if realurl is enabled or better say, fallback
+        if ($varValue == '' || $varValue == false)
         {
             return parent::generateAlias($varValue, $dc);
         }
+        
+        $objPage = $this->getPageDetails($dc->id);
 
-        // Check if overwrite is enabeld. Only for current DC
-        if ($dc->id == $this->Input->get('id') && $this->Input->post('realurl_overwrite') == true)
+        // If root set some information, cause the database is not up to date -.-
+        if($objPage->type == 'root')
         {
-            $blnRealUrlOverwrite = true;
-            $strRealUrlOverwrite = $this->Input->post('realurl_basealias');
-
-            if (strlen($strRealUrlOverwrite) == 0)
+            $this->objRealUrl->addRootMapper($dc->id, $this->Input->post('useRootAlias'));
+        }    
+              
+        // Bugfix, because db is not up to date
+        $this->objRealUrl->addSkipMapper($dc->id, $this->Input->post('realurl_no_inheritance'));
+        $this->objRealUrl->addAliasMapper($dc->id, $varValue);
+                 
+        // Get all childs and update these aliases
+        foreach ($this->getChildRecords(array($dc->id), 'tl_page', true) as $value)
+        {
+            // If we have an error exit here
+            try
             {
-                throw new Exception($GLOBALS['TL_LANG']['ERR']['emptyRealUrlOverwrite']);
-            }
-        }
-
-        // Generate an alias if there is none
-        if ($varValue == '' && $dc->id == $this->Input->get('id') && strlen($this->Input->post('title')) != 0)
-        {
-            $autoAlias = true;
-            $varValue  = standardize($this->Input->post('title'));
-        }
-        else if ($varValue == '')
-        {
-            $autoAlias = true;
-            $varValue  = standardize($objPage->title);
-        }
-
-        // Check Keywords
-        if (in_array($varValue, $GLOBALS['URL_KEYWORDS']) && $useExtException == false)
-        {
-            throw new Exception($GLOBALS['TL_LANG']['ERR']['realUrlKeywords'], $objPage->id);
-        }
-        else if (in_array($varValue, $GLOBALS['URL_KEYWORDS']) && $useExtException == true)
-        {
-            $strUrl = $this->Environment->base . "contao/main.php?do=page&act=edit&id=" . $objPage->id;
-            throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['realUrlKeywordsExt'], $strUrl, $objPage->title, $objPage->id, $varValue), $objPage->id);
-        }
-
-        // Create alias, check some/many conditions
-        // Check if we have a root page
-        if ($blnIsRoot == true)
-        {
-            // Use the value like it is, because we have a root page
-        }
-        else
-        {
-            // Check if overwrite is enabled
-            if ($blnRealUrlOverwrite == true)
-            {
-                // Use only the overwrite value 
-                $varValue = preg_replace("/\/$/", "", $strRealUrlOverwrite);
-            }
-            else
-            {
-                // Check if we have to skip the parent alias
-                if ($blnNoParentAlias == true)
+                $mixSubAlias = $this->objRealUrl->generateFolderAlias($value);
+                                
+                // Add to array, because getPageDetails uses a cached db result
+                $this->objRealUrl->addAliasMapper($value, $mixSubAlias);
+               
+                if ($mixSubAlias != false)
                 {
-                    // Create a copy from current parent
-                    $objValidParent = $objParent;
-
-                    // Get the next valid parent page
-                    while (true)
-                    {
-                        $objValidParent = $this->getPageDetails($objValidParent->pid);
-
-                        if ($objValidParent == null)
-                        {
-                            // If this is true we have an error or bug, but we will stop here
-                            throw new Exception($GLOBALS['TL_LANG']['ERR']['noPageFound'], $objPage->id);
-                        }
-
-                        if ($objValidParent->realurl_no_inheritance == 0 || $objValidParent->realurl_no_inheritance == '' || $objValidParent->type == 'root')
-                        {
-                            break;
-                        }
-                    }
-
-                    // Check if we have root and if we can use it
-                    if ($objValidParent->type == 'root')
-                    {
-                        if ($blnUseRootAlias == true)
-                        {
-                            // Use the parent alias
-                            $varValue = $objValidParent->alias . '/' . $varValue;
-                        }
-                        else
-                        {
-                            // Use the value like it is, because we have no valid parent and we could not use the root
-                        }
-                    }
-                    else
-                    {
-                        // Use the parent alias
-                        $varValue = $objValidParent->alias . '/' . $varValue;
-                    }
-                }
-                else
-                {
-                    // Check if we have to use the root alias
-                    if ($blnUseRootAlias == true)
-                    {
-                        // Use the parent alias
-                        $varValue = $objParent->alias . '/' . $varValue;
-                    }
-                    else
-                    {
-                        // If we don`t use the root, check if parent is one
-                        if ($objParent->type == 'root')
-                        {
-                            // Use the value like it is, because the parent page is a root page
-                        }
-                        else
-                        {
-                            $varValue = $objParent->alias . '/' . $varValue;
-                        }
-                    }
+                    $this->Database->prepare('UPDATE tl_page %s WHERE id=?')
+                            ->set(array('alias' => $mixSubAlias))
+                            ->executeUncached($value);
                 }
             }
-        }
-
-        // Check whether the page alias exists, if add language to url is enabled
-        // Search only in one language page tree        
-        if ($GLOBALS['TL_CONFIG']['addLanguageToUrl'] == true)
-        {
-            $objAlias = $this->Database
-                    ->prepare("SELECT id FROM tl_page WHERE (id=? OR alias=?) AND id IN(" . implode(", ", $this->getChildRecords(array($objPage->rootId), 'tl_page', false)) . ")")
-                    ->execute($dc->id, $varValue);
-        }
-        else
-        {
-            $objAlias = $this->Database
-                    ->prepare("SELECT id FROM tl_page WHERE id=? OR alias=?")
-                    ->execute($dc->id, $varValue);
-        }
-
-        if ($objAlias->numRows > ($autoAlias ? 0 : 1))
-        {
-            $arrPages = array();
-            $strDomain   = '';
-            $strLanguage = '';
-
-            while ($objAlias->next())
+            catch (Exception $exc)
             {
-                $objCurrentPage = $this->getPageDetails($objAlias->id);
-                $domain         = ($objCurrentPage->domain != '') ? $objCurrentPage->domain : '*';
-                $language       = (!$objCurrentPage->rootIsFallback) ? $objCurrentPage->rootLanguage : '*';
-
-                // Store the current page data
-                if ($objCurrentPage->id == $dc->id)
-                {
-                    $strDomain   = $domain;
-                    $strLanguage = $language;
-                }
-                else
-                {
-                    if ($GLOBALS['TL_CONFIG']['addLanguageToUrl'])
-                    {
-                        // Check domain and language
-                        $arrPages[$domain][$language][] = $objAlias->id;
-                    }
-                    else
-                    {
-                        // Check the domain only
-                        $arrPages[$domain][] = $objAlias->id;
-                    }
-                }
-            }
-
-            $arrCheck = $GLOBALS['TL_CONFIG']['addLanguageToUrl'] ? $arrPages[$strDomain][$strLanguage] : $arrPages[$strDomain];
-
-            // Check if there are multiple results for the current domain
-            if (!empty($arrCheck))
-            {
-                if ($autoAlias)
-                {
-                    $varValue .= '-' . $dc->id;
-                }
-                else
-                {
-                    throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['aliasExists'], $varValue));
-                }
+                $_SESSION['TL_ERROR'][] = $exc->getMessage();
+                break;
             }
         }
-
+        
+        // Return the current
         return $varValue;
     }
 
@@ -421,7 +317,7 @@ class tl_page_realurl extends tl_page
         if ($objRoot->folderAlias)
         {
             $arrFolders = trimsplit("/", $varValue);
-            $varValue   = array_pop($arrFolders);
+            $varValue = array_pop($arrFolders);
         }
 
         return $varValue;
@@ -519,13 +415,14 @@ class tl_page_realurl extends tl_page
                 // Check if overwrite is enabled
                 if ($objChildren->realurl_overwrite == true)
                 {
+                    $this->generateAliasRecursive($objChildren->id, $useExtException);
                     continue;
                 }
 
                 $arrFolders = trimsplit("/", $objChildren->alias);
-                $strAlias   = array_pop($arrFolders);
-                $strAlias   = $this->generateFolderAlias($strAlias, (object) array(
-                            'id'           => $objChildren->id,
+                $strAlias = array_pop($arrFolders);
+                $strAlias = $this->generateFolderAlias($strAlias, (object) array(
+                            'id' => $objChildren->id,
                             'activeRecord' => $objChildren), $useExtException);
 
                 $this->Database
@@ -536,45 +433,4 @@ class tl_page_realurl extends tl_page
             }
         }
     }
-
-    /**
-     * Create a list with all aliases and save it in database 
-     * 
-     * @return void
-     */
-    public function createAliasList()
-    {
-        // Clear table
-        $this->Database
-                ->prepare("TRUNCATE tl_realurl_aliases")
-                ->executeUncached();
-
-        // Get all aliases
-        $arrLists = array();
-
-        $objAlias = $this->Database
-                ->prepare("SELECT alias FROM tl_page")
-                ->execute();
-
-        while ($objAlias->next())
-        {
-            if (stripos($objAlias->alias, "/") === false)
-            {
-                $arrLists[$objAlias->alias] = true;
-            }
-            else
-            {
-                foreach (trimsplit("/", $objAlias->alias) as $value)
-                {
-                    $arrLists[$value] = true;
-                }
-            }
-        }
-
-        // Create a new list
-        $this->Database
-                ->prepare("INSERT INTO tl_realurl_aliases (alias) VALUES ('" . implode("'),\n('", array_keys($arrLists)) . "')")
-                ->execute();
-    }
-
 }
