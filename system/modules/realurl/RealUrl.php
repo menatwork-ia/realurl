@@ -71,9 +71,9 @@ class RealUrl extends Backend
         $this->arrRootMapper = array();
     }
 
-    public function addSkipMapper($intID, $blnUserRoot)
-    {
-        $this->arrSkipMapper[$intID] = $blnUserRoot;
+    public function addSkipMapper($intID, $blnSkip)
+    {        
+        $this->arrSkipMapper[$intID] = $blnSkip;
     }
 
     public function restSkipMapper()
@@ -342,7 +342,12 @@ class RealUrl extends Backend
             }
             else
             {
-                foreach (trimsplit("/", $strAlias) as $value)
+                $arrFragments = trimsplit("/", $strAlias); 
+                
+                // Free up
+                $arrFragments = array_filter($arrFragments, 'strlen');
+                
+                foreach ($arrFragments as $value)
                 {
                     $arrLists[$value] = true;
                 }
@@ -366,7 +371,7 @@ class RealUrl extends Backend
             // If we have an error exit here
             try
             {
-                $mixAlias = $this->generateFolderAlias($objRootPages->id);
+                $mixAlias = $this->generateFolderAlias($objRootPages->id, '', false, true);
 
                 // Add to array, because getPageDetails uses a cached db result
                 $this->addAliasMapper($objRootPages->id, $mixAlias);
@@ -386,8 +391,8 @@ class RealUrl extends Backend
                     foreach ($arrPages as $subValue)
                     {
                         // Add to array, because getPageDetails uses a cached db result
-                        $mixAlias = $this->generateFolderAlias($subValue);
-
+                        $mixAlias = $this->generateFolderAlias($subValue, '', false, true);
+                        
                         // Update Alias
                         if ($mixAlias != false)
                         {
@@ -411,15 +416,17 @@ class RealUrl extends Backend
 
     /**
      * Generate for a tl_page an alias.
-     * 
-     * @param	mixed
-     * @param	DataContainer
-     * @param   boolean $useExtException If true an extended error message, with id, link and some more information, will be returned.
-     * @return	mixed
+     *
+     * @param int $intID Page ID
+     * @param string $varValue New alias
+     * @param boolean $blnCheckInput Check Input vars, because data are not stored in databse now
+     * @param boolean $useExtException Get some more informations, like page id or url
+     * @return boolean|string
+     * @throws Exception 
      * @link	http://www.contao.org/callbacks.html#save_callback
      * @version 2.0
      */
-    public function generateFolderAlias($intID, $varValue = '', $blnCheckInput = false)
+    public function generateFolderAlias($intID, $varValue = '', $blnCheckInput = false, $useExtException = false)
     {
         // Init some Vars
         $objPage   = $this->getPageDetails($intID);
@@ -452,7 +459,7 @@ class RealUrl extends Backend
             // Get root/parent page
             $objRoot   = $this->getPageDetails($objPage->rootId);
             $objParent = $this->getPageDetails($objPage->pid);
-
+            
             // Get state of no inheritance from cache or database
             if (key_exists($objParent->id, $this->arrSkipMapper))
             {
@@ -462,8 +469,12 @@ class RealUrl extends Backend
             {
                 $blnNoParentAlias = true;
             }
+            else
+            {
+                $blnNoParentAlias = false;
+            }
         }
-
+        
         // Set state of use root alias
         if (key_exists($objRoot->id, $this->arrRootMapper))
         {
@@ -504,7 +515,7 @@ class RealUrl extends Backend
         }
 
         // Generate an alias if there is none
-        if ($blnCheckInput && $varValue == '' && $dc->id == $this->Input->get('id') && strlen($this->Input->post('title')) != 0)
+        if ($blnCheckInput && $varValue == '' && $intID == $this->Input->get('id') && strlen($this->Input->post('title')) != 0)
         {
             $autoAlias = true;
             $varValue  = standardize($this->Input->post('title'));
@@ -524,7 +535,7 @@ class RealUrl extends Backend
         // Check Keywords
         if (in_array($varValue, $GLOBALS['URL_KEYWORDS']) && $useExtException == false)
         {
-            throw new Exception($GLOBALS['TL_LANG']['ERR']['realUrlKeywords'], $objPage->id);
+            throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['realUrlKeywords'], $varValue), $objPage->id);
         }
         else if (in_array($varValue, $GLOBALS['URL_KEYWORDS']) && $useExtException == true)
         {
