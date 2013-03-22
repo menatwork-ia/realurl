@@ -80,24 +80,28 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['load_callback'][]    = array('
 $GLOBALS['TL_DCA']['tl_page']['fields']['folderAlias'] = array(
     'label'     => &$GLOBALS['TL_LANG']['tl_page']['folderAlias'],
     'inputType' => 'checkbox',
+    'exclude'   => true,
     'eval'      => array('tl_class' => 'w50'),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['subAlias'] = array(
     'label'     => &$GLOBALS['TL_LANG']['tl_page']['subAlias'],
     'inputType' => 'checkbox',
+    'exclude'   => true,
     'eval'      => array('tl_class' => 'w50'),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['useRootAlias'] = array(
     'label'     => &$GLOBALS['TL_LANG']['tl_page']['useRootAlias'],
     'inputType' => 'checkbox',
+    'exclude'   => true,
     'eval'      => array('tl_class' => 'w50'),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_no_inheritance'] = array(
     'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance'],
     'inputType' => 'checkbox',
+    'exclude'   => true,
     'eval'      => array(
         'tl_class'  => 'w50',
         'doNotCopy' => true
@@ -107,6 +111,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_no_inheritance'] = array(
 $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_overwrite'] = array(
     'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_overwrite'],
     'inputType' => 'checkbox',
+    'exclude'   => true,
     'eval'      => array(
         'submitOnChange' => true,
         'tl_class'       => 'w50',
@@ -117,6 +122,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_overwrite'] = array(
 $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_basealias'] = array(
     'label'         => &$GLOBALS['TL_LANG']['tl_page']['alias'],
     'inputType'     => 'text',
+    'exclude'       => true,
     'load_callback' => array(array('tl_page_realurl', 'loadFullAlias')),
     'eval' => array(
         'spaceToUnderscore' => true,
@@ -169,7 +175,7 @@ class tl_page_realurl extends tl_page
      * @version 2.0
      */
     public function generateFolderAlias($varValue, $dc)
-    {           
+    {         
         // If empty recreate the alias
         if (empty($varValue))
         {
