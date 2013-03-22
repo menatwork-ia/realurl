@@ -102,10 +102,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_no_inheritance'] = array(
     'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance'],
     'inputType' => 'checkbox',
     'exclude'   => true,
-    'eval'      => array(
-        'tl_class'  => 'w50',
-        'doNotCopy' => true
-    ),
+    'eval'      => array('tl_class'  => 'w50'),
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_overwrite'] = array(
@@ -114,8 +111,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_overwrite'] = array(
     'exclude'   => true,
     'eval'      => array(
         'submitOnChange' => true,
-        'tl_class'       => 'w50',
-        'doNotCopy'      => true
+        'tl_class'       => 'w50'
     ),
 );
 
@@ -127,7 +123,6 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_basealias'] = array(
     'eval' => array(
         'spaceToUnderscore' => true,
         'trailingSlash'     => true,
-        'doNotCopy'         => true,
         'tl_class'          => 'clr long'
     )
 );
