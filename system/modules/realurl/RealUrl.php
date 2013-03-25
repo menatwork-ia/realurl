@@ -1,12 +1,12 @@
-<?php if (!defined('TL_ROOT')) die('You cannot access this file directly!');
+<?php
 
 /**
  * Contao Open Source CMS
  *
  * @copyright  Andreas Schempp 2008-2011
- * @copyright  MEN AT WORK 2012-2013 
+ * @copyright  MEN AT WORK 2012-2013
  * @package    realurl
- * @license    GNU/LGPL 
+ * @license    GNU/LGPL
  * @filesource
  */
 
@@ -22,6 +22,7 @@ class RealUrl extends Backend
     protected $arrAliasMapper = array();
     protected $arrRootMapper = array();
     protected $arrSkipMapper = array();
+    protected $arrLanguageMapper = array();
 
     // Core --------------------------------------------------------------------
 
@@ -60,6 +61,16 @@ class RealUrl extends Backend
     public function restSkipMapper()
     {
         $this->arrSkipMapper = array();
+    }
+
+    public function addLanguageMapper($intID, $strLanguage)
+    {
+        $this->arrLanguageMapper[$intID] = $strLanguage;
+    }
+
+    public function restLanguageMapper()
+    {
+        $this->arrLanguageMapper = array();
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -344,7 +355,7 @@ class RealUrl extends Backend
     public function regenerateAllAliases()
     {
         $objRootPages = $this->Database
-                ->prepare('SELECT * FROM tl_page WHERE type="root" AND folderAlias=1')
+                ->prepare('SELECT id, realurl_force_alias FROM tl_page WHERE type="root" AND folderAlias=1')
                 ->executeUncached();
 
         while ($objRootPages->next())
@@ -352,7 +363,7 @@ class RealUrl extends Backend
             // If we have an error exit here
             try
             {
-                $mixAlias = $this->generateFolderAlias($objRootPages->id, '', false, true);
+                $mixAlias = $this->generateFolderAlias($objRootPages->id, '', false, true, false);
 
                 // Add to array, because getPageDetails uses a cached db result
                 $this->addAliasMapper($objRootPages->id, $mixAlias);
@@ -372,7 +383,7 @@ class RealUrl extends Backend
                     foreach ($arrPages as $subValue)
                     {
                         // Add to array, because getPageDetails uses a cached db result
-                        $mixAlias = $this->generateFolderAlias($subValue, '', false, true);
+                        $mixAlias = $this->generateFolderAlias($subValue, '', false, true, $objRootPages->realurl_force_alias);
                         
                         // Update Alias
                         if ($mixAlias != false)
@@ -407,7 +418,7 @@ class RealUrl extends Backend
      * @link	http://www.contao.org/callbacks.html#save_callback
      * @version 2.0
      */
-    public function generateFolderAlias($intID, $varValue = '', $blnCheckInput = false, $useExtException = false)
+    public function generateFolderAlias($intID, $varValue = '', $blnCheckInput = false, $useExtException = false, $blnForce = false)
     {
         // Init some Vars
         $objPage   = $this->getPageDetails($intID);
@@ -423,7 +434,7 @@ class RealUrl extends Backend
         $strRealUrlOverwrite = "";
 
         // Get the alias
-        if (empty($varValue))
+        if (empty($varValue) && $objPage->alias && $blnForce == false)
         {
             $varValue = explode("/", $objPage->alias);
             $varValue = array_pop($varValue);
@@ -483,7 +494,7 @@ class RealUrl extends Backend
                 throw new Exception($GLOBALS['TL_LANG']['ERR']['emptyRealUrlOverwrite']);
             }
         }
-        // Check if overwrite is enabeld. Only for current DC
+        // Check if overwrite is enabeld. Only for current DC.
         else if ($objPage->realurl_overwrite == true)
         {
             $blnRealUrlOverwrite = true;
@@ -671,7 +682,15 @@ class RealUrl extends Backend
             {
                 $objCurrentPage = $this->getPageDetails($objAlias->id);
                 $domain         = ($objCurrentPage->domain != '') ? $objCurrentPage->domain : '*';
-                $language       = (!$objCurrentPage->rootIsFallback) ? $objCurrentPage->rootLanguage : '*';
+                
+                if (key_exists($objCurrentPage->rootId, $this->arrLanguageMapper))
+                {
+                    $language = $this->arrLanguageMapper[$objCurrentPage->rootId];
+                }
+                else
+                {
+                    $language = (!$objCurrentPage->rootIsFallback) ? $objCurrentPage->rootLanguage : '*';
+                }
 
                 // Store the current page data
                 if ($objCurrentPage->id == $objPage->id)
