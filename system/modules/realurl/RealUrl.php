@@ -22,6 +22,7 @@ class RealUrl extends Backend
     protected $arrAliasMapper = array();
     protected $arrRootMapper = array();
     protected $arrSkipMapper = array();
+    protected $arrLanguageMapper = array();
 
     // Core --------------------------------------------------------------------
 
@@ -60,6 +61,16 @@ class RealUrl extends Backend
     public function restSkipMapper()
     {
         $this->arrSkipMapper = array();
+    }
+
+    public function addLanguageMapper($intID, $strLanguage)
+    {
+        $this->arrLanguageMapper[$intID] = $strLanguage;
+    }
+
+    public function restLanguageMapper()
+    {
+        $this->arrLanguageMapper = array();
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -483,7 +494,7 @@ class RealUrl extends Backend
                 throw new Exception($GLOBALS['TL_LANG']['ERR']['emptyRealUrlOverwrite']);
             }
         }
-        // Check if overwrite is enabeld. Only for current DC
+        // Check if overwrite is enabeld.
         else if ($objPage->realurl_overwrite == true)
         {
             $blnRealUrlOverwrite = true;
@@ -671,7 +682,15 @@ class RealUrl extends Backend
             {
                 $objCurrentPage = $this->getPageDetails($objAlias->id);
                 $domain         = ($objCurrentPage->domain != '') ? $objCurrentPage->domain : '*';
-                $language       = (!$objCurrentPage->rootIsFallback) ? $objCurrentPage->rootLanguage : '*';
+                
+                if (key_exists($objCurrentPage->rootId, $this->arrLanguageMapper))
+                {
+                    $language = $this->arrLanguageMapper[$objCurrentPage->rootId];
+                }
+                else
+                {
+                    $language = (!$objCurrentPage->rootIsFallback) ? $objCurrentPage->rootLanguage : '*';
+                }
 
                 // Store the current page data
                 if ($objCurrentPage->id == $objPage->id)
