@@ -18,6 +18,7 @@ CREATE TABLE `tl_page` (
   `realurl_overwrite` char(1) NOT NULL default '',
   `useRootAlias` char(1) NOT NULL default '',
   `realurl_basealias` text NULL,
+  `realurl_force_alias` char(1) NOT NULL default '',
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- 

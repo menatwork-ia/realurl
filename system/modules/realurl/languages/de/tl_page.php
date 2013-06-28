@@ -18,11 +18,12 @@ $GLOBALS['TL_LANG']['tl_page']['realurl_legend']            = 'Alias-Einstellung
 /**
  * Fields
  */
-$GLOBALS['TL_LANG']['tl_page']['folderAlias']		        = array('Ordner-Alias erstellen', 'Seitenaliase automatisch mit übergeordneten Seiten generieren (Ordner-ähnlich).');
-$GLOBALS['TL_LANG']['tl_page']['subAlias']		            = array('Alias von Unterseiten aktualisieren', 'Generiert einen Alias für Unterseiten.');
+$GLOBALS['TL_LANG']['tl_page']['folderAlias']               = array('Ordner-Alias erstellen', 'Seitenaliase automatisch mit übergeordneten Seiten generieren (Ordner-ähnlich).');
+$GLOBALS['TL_LANG']['tl_page']['subAlias']                  = array('Alias von Unterseiten aktualisieren', 'Generiert einen Alias für Unterseiten.');
 $GLOBALS['TL_LANG']['tl_page']['useRootAlias']              = array('Alias des Startpunkts verwenden', 'Verwendet den Alias des Startpunkts als Basis für alle anderen Seiten.');
 $GLOBALS['TL_LANG']['tl_page']['realurl_overwrite']	        = array('Alias überschreiben', 'Klicken Sie hier, um den gesamten Alias zurückzusetzen.');
 $GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance']    = array('Alias nicht an Unterseiten vererben', 'Klicken Sie hier, wenn der Alias dieser Seite nicht an Unterseiten vererbt werden soll.');
+$GLOBALS['TL_LANG']['tl_page']['realurl_force_alias']       = array('Alias neu erstellen beim Aufruf von "Alias neu erstellen".', 'Wählen Sie diese Option wenn Sie wollen das alle Aliase und Folder Urls neuerstellt werden.');
 
 /**
  * Miscellaneous

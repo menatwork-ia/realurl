@@ -58,7 +58,7 @@ $GLOBALS['TL_DCA']['tl_page']['list']['global_operations']['realurl_Regenerate']
 /**
  * Palettes
  */
-$GLOBALS['TL_DCA']['tl_page']['palettes']['root'] .= ';{realurl_legend},folderAlias,subAlias,useRootAlias';
+$GLOBALS['TL_DCA']['tl_page']['palettes']['root'] .= ';{realurl_legend},folderAlias,subAlias,useRootAlias,realurl_force_alias';
 $GLOBALS['TL_DCA']['tl_page']['palettes']['__selector__'][]       = 'realurl_overwrite';
 $GLOBALS['TL_DCA']['tl_page']['subpalettes']['realurl_overwrite'] = 'realurl_basealias';
 
@@ -127,6 +127,15 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_basealias'] = array(
     )
 );
 
+$GLOBALS['TL_DCA']['tl_page']['fields']['realurl_force_alias'] = array(
+    'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_force_alias'],
+    'inputType' => 'checkbox',
+    'exclude'   => true,
+    'eval'      => array(
+        'tl_class'       => 'w50'
+    ),
+);
+
 /**
  * Helper/Callback class
  */
@@ -170,16 +179,16 @@ class tl_page_realurl extends tl_page
      * @version 2.0
      */
     public function generateFolderAlias($varValue, $dc)
-    {         
-        // If empty recreate the alias
-        if (empty($varValue))
+    {
+        $blnForce = false;
+        
+        if($varValue == '')
         {
-            $varValue = parent::generateAlias($varValue, $dc);
+            $blnForce = true;
         }
-
-        // Generate folder alias
-        $varValue = $this->objRealUrl->generateFolderAlias($dc->id, $varValue, true);
-
+        
+        $varValue = $this->objRealUrl->generateFolderAlias($dc->id, $varValue, true, false, $blnForce);
+        
         // Check if realurl is enabled or better say, fallback
         if ($varValue == '' || $varValue == false)
         {
