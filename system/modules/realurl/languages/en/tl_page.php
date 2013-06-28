@@ -23,6 +23,7 @@ $GLOBALS['TL_LANG']['tl_page']['subAlias']		            = array('Generate alias 
 $GLOBALS['TL_LANG']['tl_page']['useRootAlias']              = array('Use the website root alias', 'Used the alias of the website root as the basis for all other pages.');
 $GLOBALS['TL_LANG']['tl_page']['realurl_overwrite']	        = array('Overwrite page alias', 'Click here to reset the entire alias.');
 $GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance']    = array('Do not inherit page alias to subpages', 'Click here if the page alias is not to be inherit to subpages.');
+$GLOBALS['TL_LANG']['tl_page']['realurl_force_alias']       = array('Force alias generation', 'Click here if you want to force the generation of all page alias for the current page tree.');
 
 /**
  * Miscellaneous
