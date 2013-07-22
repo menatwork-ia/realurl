@@ -1,4 +1,4 @@
-<?php if (!defined('TL_ROOT')) die('You cannot access this file directly!');
+<?php
 
 /**
  * Contao Open Source CMS
@@ -41,14 +41,16 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['alwaysSave'] = true;
 /**
  * Global operations
  */
-$GLOBALS['TL_DCA']['tl_page']['list']['global_operations']['realurl_showAlias'] = array(
+$GLOBALS['TL_DCA']['tl_page']['list']['global_operations']['realurl_showAlias'] = array
+(
     'label'           => &$GLOBALS['TL_LANG']['tl_page']['realurl']['showAlias'],
     'href'            => 'key=realurl_showAlias',
     'class'           => 'relaurl_alias_toggle',
     'button_callback' => array('RealUrl', 'bttShowAlias'),
 );
 
-$GLOBALS['TL_DCA']['tl_page']['list']['global_operations']['realurl_Regenerate'] = array(
+$GLOBALS['TL_DCA']['tl_page']['list']['global_operations']['realurl_Regenerate'] = array
+(
     'label'           => &$GLOBALS['TL_LANG']['tl_page']['realurl']['regenerate'],
     'href'            => 'key=realurl_regenerate',
     'class'           => 'relaurl_regenerate',
@@ -58,7 +60,7 @@ $GLOBALS['TL_DCA']['tl_page']['list']['global_operations']['realurl_Regenerate']
 /**
  * Palettes
  */
-$GLOBALS['TL_DCA']['tl_page']['palettes']['root'] .= ';{realurl_legend},folderAlias,subAlias,useRootAlias,realurl_force_alias';
+$GLOBALS['TL_DCA']['tl_page']['palettes']['root'] .= ';{realurl_legend},folderAlias,subAlias,useRootAlias';
 $GLOBALS['TL_DCA']['tl_page']['palettes']['__selector__'][]       = 'realurl_overwrite';
 $GLOBALS['TL_DCA']['tl_page']['subpalettes']['realurl_overwrite'] = 'realurl_basealias';
 
@@ -77,63 +79,72 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['rgxp']       = 'folder
 $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['alwaysSave'] = true;
 $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['load_callback'][]    = array('tl_page_realurl', 'hideParentAlias');
 
-$GLOBALS['TL_DCA']['tl_page']['fields']['folderAlias'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['folderAlias'],
-    'inputType' => 'checkbox',
-    'exclude'   => true,
-    'eval'      => array('tl_class' => 'w50'),
+$GLOBALS['TL_DCA']['tl_page']['fields']['folderAlias'] = array
+(
+    'label'           => &$GLOBALS['TL_LANG']['tl_page']['folderAlias'],
+    'inputType'       => 'checkbox',
+    'exclude'         => true,
+    'eval'            => array('tl_class' => 'w50'),
 );
 
-$GLOBALS['TL_DCA']['tl_page']['fields']['subAlias'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['subAlias'],
-    'inputType' => 'checkbox',
-    'exclude'   => true,
-    'eval'      => array('tl_class' => 'w50'),
+$GLOBALS['TL_DCA']['tl_page']['fields']['subAlias'] = array
+(
+    'label'           => &$GLOBALS['TL_LANG']['tl_page']['subAlias'],
+    'inputType'       => 'checkbox',
+    'exclude'         => true,
+    'eval'            => array('tl_class' => 'w50'),
 );
 
-$GLOBALS['TL_DCA']['tl_page']['fields']['useRootAlias'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['useRootAlias'],
-    'inputType' => 'checkbox',
-    'exclude'   => true,
-    'eval'      => array('tl_class' => 'w50'),
+$GLOBALS['TL_DCA']['tl_page']['fields']['useRootAlias'] = array
+(
+    'label'           => &$GLOBALS['TL_LANG']['tl_page']['useRootAlias'],
+    'inputType'       => 'checkbox',
+    'exclude'         => true,
+    'eval'            => array('tl_class' => 'w50'),
 );
 
-$GLOBALS['TL_DCA']['tl_page']['fields']['realurl_no_inheritance'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance'],
-    'inputType' => 'checkbox',
-    'exclude'   => true,
-    'eval'      => array('tl_class'  => 'w50'),
+$GLOBALS['TL_DCA']['tl_page']['fields']['realurl_no_inheritance'] = array
+(
+    'label'           => &$GLOBALS['TL_LANG']['tl_page']['realurl_no_inheritance'],
+    'inputType'       => 'checkbox',
+    'exclude'         => true,
+    'eval'            => array('tl_class'  => 'w50'),
 );
 
-$GLOBALS['TL_DCA']['tl_page']['fields']['realurl_overwrite'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_overwrite'],
-    'inputType' => 'checkbox',
-    'exclude'   => true,
-    'eval'      => array(
-        'submitOnChange' => true,
-        'tl_class'       => 'w50'
+$GLOBALS['TL_DCA']['tl_page']['fields']['realurl_overwrite'] = array
+(
+    'label'           => &$GLOBALS['TL_LANG']['tl_page']['realurl_overwrite'],
+    'inputType'       => 'checkbox',
+    'exclude'         => true,
+    'eval' => array
+    (
+        'submitOnChange'  => true,
+        'tl_class'        => 'w50'
     ),
 );
 
-$GLOBALS['TL_DCA']['tl_page']['fields']['realurl_basealias'] = array(
-    'label'         => &$GLOBALS['TL_LANG']['tl_page']['alias'],
-    'inputType'     => 'text',
-    'exclude'       => true,
-    'load_callback' => array(array('tl_page_realurl', 'loadFullAlias')),
-    'eval' => array(
-        'spaceToUnderscore' => true,
-        'trailingSlash'     => true,
-        'tl_class'          => 'clr long'
+$GLOBALS['TL_DCA']['tl_page']['fields']['realurl_basealias'] = array
+(
+    'label'           => &$GLOBALS['TL_LANG']['tl_page']['alias'],
+    'inputType'       => 'text',
+    'exclude'         => true,
+    'load_callback'   => array
+    (
+        array('tl_page_realurl', 'loadFullAlias')
+    ),
+    'eval' => array
+    (
+        'spaceToUnderscore'  => true,
+        'trailingSlash'      => true,
+        'tl_class'           => 'clr long'
     )
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['realurl_force_alias'] = array(
-    'label'     => &$GLOBALS['TL_LANG']['tl_page']['realurl_force_alias'],
-    'inputType' => 'checkbox',
-    'exclude'   => true,
-    'eval'      => array(
-        'tl_class'       => 'w50'
-    ),
+    'label'           => &$GLOBALS['TL_LANG']['tl_page']['realurl_force_alias'],
+    'inputType'       => 'checkbox',
+    'exclude'         => true,
+    'eval'            => array('tl_class' => 'w50')
 );
 
 /**

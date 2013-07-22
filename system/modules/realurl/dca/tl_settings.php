@@ -1,4 +1,4 @@
-<?php if (!defined('TL_ROOT')) die('You cannot access this file directly!');
+<?php
 
 /**
  * Contao Open Source CMS
@@ -21,8 +21,7 @@ $GLOBALS['TL_DCA']['tl_settings']['palettes']['default'] = preg_replace('@([,|;]
  */
 $GLOBALS['TL_DCA']['tl_settings']['fields']['urlKeywords'] = array
 (
-	'label'			=> &$GLOBALS['TL_LANG']['tl_settings']['urlKeywords'],
-	'inputType'		=> 'text',
-	'eval'			=> array('tl_class'=>'long'),
+	'label'           => &$GLOBALS['TL_LANG']['tl_settings']['urlKeywords'],
+	'inputType'       => 'text',
+	'eval'            => array('tl_class'=>'long'),
 );
-
