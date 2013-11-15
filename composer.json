@@ -21,29 +21,25 @@
 	],
 	"support":{
 		"email":"contao@men-at-work.de",
-		"issues":"https://github.com/menatwork/geolocation/issues",
+		"issues":"https://github.com/menatwork/realurl/issues",
 		"irc":"irc://irc.freenode.org/contao.dev",
-		"source":"https://github.com/menatwork/geolocation"
+		"source":"https://github.com/menatwork/realurl"
 	},
 	"require":{
 		"php":">=5.3",
-		"contao/core":">=2.11,<4",
-		"contao-community-alliance/composer-installer":"*",
-		"discordier/httprequestextended":">=1.0,<1.2",
-		"menatwork/contao-multicolumnwizard":"3.2.*",
-		"contao-legacy/ajax":">=1.1.5,<2.0.0"
+		"contao/core":">=3,<4",
+		"contao-community-alliance/composer-installer":"*"
 	},
 	"autoload":{
 		"classmap":["system/"]
 	},
 	"replace":{
-		"contao-legacy/geolocation":"*"
+		"contao-legacy/realurl":"*"
 	},
 	"extra":{
 		"contao":{
 			"sources":{
-				"system/config/countriesByContinent.php":"system/config/countriesByContinent.php",
-				"system/modules/geolocation":"system/modules/geolocation"
+				"system/modules/realurl":"system/modules/realurl"
 			}
 		}
 	}
