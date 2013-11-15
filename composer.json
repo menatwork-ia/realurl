@@ -21,9 +21,9 @@
 	],
 	"support":{
 		"email":"contao@men-at-work.de",
-		"issues":"https://github.com/menatwork/realurl/issues",
+		"issues":"https://github.com/menatwork-ia/realurl/issues",
 		"irc":"irc://irc.freenode.org/contao.dev",
-		"source":"https://github.com/menatwork/realurl"
+		"source":"https://github.com/menatwork-ia/realurl"
 	},
 	"require":{
 		"php":">=5.3",
