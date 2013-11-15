@@ -5,4 +5,3 @@
 <IfModule mod_authz_core.c>
   Require all granted
 </IfModule>
-Options -Indexes
