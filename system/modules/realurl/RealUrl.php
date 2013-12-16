@@ -197,9 +197,9 @@ class RealUrl extends Backend
                     }
 
                     // Check flag.
-                    if ($objParentPage->realurl_no_inheritance == true)
+                    if ($objParentPage->realurl_no_inheritance != true)
                     {
-                        $objPage->folderUrl = $objParentPage->folderUrl;
+                        $objPage->folderUrl = $objParentPage->alias . '/';
                         break;
                     }
                     else
