@@ -13,7 +13,8 @@
 /**
  * callback / core callbacks overwrite
  */
-$GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback'] = array('RealUrl', 'labelPage');
+$GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback_old'] = $GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback'];
+$GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback']     = array('RealUrl', 'labelPage');
 
 /**
  * Global operations

@@ -96,9 +96,19 @@ class RealUrl extends Backend
     public function labelPage($row, $label, DataContainer $dc = null, $imageAttribute = '', $blnReturnImage = false, $blnProtected = false)
     {
         // Call some callbacks
-        $arrCallback = array(
-            array('tl_page', 'addIcon')
-        );
+        $arrCallback = array();
+
+        if (!empty($GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback_old']) && count($GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback_old']) == 2)
+        {
+            $arrOldCallback = $GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback_old'];
+            $strKey      = $arrOldCallback[0] . '-' . $arrOldCallback[1];
+
+            $arrCallback[$strKey] = $arrOldCallback;
+        }
+        else
+        {
+            $arrCallback['tl_page-addIcon'] = array('tl_page', 'addIcon');
+        }
 
         foreach ($arrCallback as $value)
         {
@@ -106,6 +116,7 @@ class RealUrl extends Backend
             $label = $this->$value[0]->$value[1]($row, $label, $dc, $imageAttribute, $blnReturnImage, $blnProtected);
         }
 
+        // Return the current lable if realurl  is not in show mode.
         if ($this->Session->get('realurl_showAlias') == 0)
         {
             return $label;
@@ -153,6 +164,18 @@ class RealUrl extends Backend
         $strLableAlias .= ']</span>';
 
         return $label . $strLableAlias;
+
+        // Get the data from the old data.
+        if(!empty($GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback_old']) && count($GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback_old']) == 2)
+        {
+            $arrCall = $GLOBALS['TL_DCA']['tl_page']['list']['label']['label_callback_old'];
+            $objCallerClass = new $arrCall[0];
+            return call_user_func_array (array($objCallerClass, $arrCall[1]), array($row, ($label . $strLableAlias), $dc, $imageAttribute, $blnReturnImage, $blnProtected));
+        }
+        else
+        {
+            return $label . $strLableAlias;
+        }
     }
 
     // Functions ---------------------------------------------------------------
@@ -167,8 +190,6 @@ class RealUrl extends Backend
     public function generateAlias($varValue, DataContainer $dc)
     {
         $autoAlias = false;
-
-        //pizzaschule/bedienung
         
         // Generate an alias if there is none
         if ($varValue == '')
@@ -191,7 +212,7 @@ class RealUrl extends Backend
                     $objParentPage = PageModel::findWithDetails($intPid);
 
                     // Skip for root or empty.
-                    if ($objParentPage->tpye == 'root' || empty($objParentPage))
+                    if ($objParentPage->type == 'root' || empty($objParentPage))
                     {
                         break;
                     }
