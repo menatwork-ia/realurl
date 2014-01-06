@@ -1,31 +1,22 @@
 <?php
 
-if (!defined('TL_ROOT'))
-    die('You cannot access this file directly!');
-
 /**
  * Contao Open Source CMS
  *
  * @copyright  Andreas Schempp 2008-2011
- * @copyright  MEN AT WORK 2012-2013 
+ * @copyright  MEN AT WORK 2014
  * @package    realurl
  * @license    GNU/LGPL 
  * @filesource
  */
+
 class RealUrl extends Backend
 {
-
-    // Core --------------------------------------------------------------------
 
     public function __construct()
     {
         parent::__construct();
     }
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Backend Functions
-    ////////////////////////////////////////////////////////////////////////////
-    // Global operations -------------------------------------------------------
 
     /**
      * Add a new global button for show/hide alias

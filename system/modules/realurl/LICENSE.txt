@@ -1,7 +1,7 @@
 /**
- * Package    	realurl Extension
- * Copyright  	MEN AT WORK 2013
+ * Package      realurl Extension
+ * Copyright    MEN AT WORK 2013
  * Author       Andreas Isaak <isaak@men-at-work.de>, Stefan Heimes <heimes@men-at-work.de>
  * Link         http://www.men-at-work.de/
- * License    	GNU/LGPL
+ * License      GNU/LGPL
  */
