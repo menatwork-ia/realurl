@@ -205,6 +205,7 @@ class RealUrl extends Backend
                     // Skip for root or empty.
                     if ($objParentPage->type == 'root' || empty($objParentPage))
                     {
+                        $objPage->folderUrl = '';
                         break;
                     }
 
