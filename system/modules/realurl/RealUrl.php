@@ -180,6 +180,11 @@ class RealUrl extends Backend
      */
     public function generateAlias($varValue, DataContainer $dc)
     {
+        if (!$dc->id && !$dc->activeRecord)
+        {
+            return $varValue;
+        }
+
         $autoAlias = false;
         
         // Generate an alias if there is none
