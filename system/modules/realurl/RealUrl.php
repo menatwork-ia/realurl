@@ -201,8 +201,7 @@ class RealUrl extends Backend
             // Generate folder URL aliases (see #4933)
             if ($GLOBALS['TL_CONFIG']['folderUrl'])
             {
-                $dc->activeRecord->alias = $varValue;
-                $objPage                 = PageModel::findWithDetails($dc->activeRecord->id);
+                $objPage = PageModel::findWithDetails($dc->activeRecord->id);
 
                 $intPid = $objPage->pid;
                 $i      = 0;
