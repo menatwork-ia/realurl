@@ -190,6 +190,11 @@ class RealUrl extends Backend
         // Generate an alias if there is none
         if ($varValue == '')
         {
+            if (!$dc->activeRecord)
+            {
+                $dc->activeRecord = PageModel::findByPk($dc->id);
+            }
+
             $autoAlias = true;
             $varValue  = standardize(String::restoreBasicEntities($dc->activeRecord->title));
 
