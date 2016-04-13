@@ -180,19 +180,28 @@ class RealUrl extends Backend
      */
     public function generateAlias($varValue, DataContainer $dc)
     {
+        if (!$dc->id && !$dc->activeRecord)
+        {
+            return $varValue;
+        }
+
         $autoAlias = false;
         
         // Generate an alias if there is none
         if ($varValue == '')
         {
+            if (!$dc->activeRecord)
+            {
+                $dc->activeRecord = PageModel::findByPk($dc->id);
+            }
+
             $autoAlias = true;
             $varValue  = standardize(String::restoreBasicEntities($dc->activeRecord->title));
 
             // Generate folder URL aliases (see #4933)
             if ($GLOBALS['TL_CONFIG']['folderUrl'])
             {
-                $dc->activeRecord->alias = $varValue;
-                $objPage                 = PageModel::findWithDetails($dc->activeRecord->id);
+                $objPage = PageModel::findWithDetails($dc->activeRecord->id);
 
                 $intPid = $objPage->pid;
                 $i      = 0;
