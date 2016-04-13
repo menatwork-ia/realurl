@@ -42,7 +42,7 @@ foreach ($GLOBALS['TL_DCA']['tl_page']['palettes'] as $keyPalette => $valuePalet
  */
 foreach ($GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'] as $i => $arrCallback)
 {
-    if ($arrCallback[1] == 'generateAlias')
+    if ($arrCallback[0] == 'tl_page' && $arrCallback[1] == 'generateAlias')
     {
         $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'][$i] = array('RealUrl', 'generateAlias');
         break;
