@@ -6,7 +6,7 @@
  * @copyright  Andreas Schempp 2008-2011
  * @copyright  MEN AT WORK 2014
  * @package    realurl
- * @license    GNU/LGPL 
+ * @license    GNU/LGPL
  * @filesource
  */
 
@@ -20,7 +20,7 @@ class RealUrl extends Backend
 
     /**
      * Add a new global button for show/hide alias
-     * 
+     *
      * @param type $strHref
      * @param type $strLabel
      * @param type $strTitle
@@ -28,7 +28,7 @@ class RealUrl extends Backend
      * @param type $strAttributes
      * @param type $strTable
      * @param type $intRoot
-     * 
+     *
      * @return string
      */
     public function bttShowAlias($strHref, $strLabel, $strTitle, $strClass, $strAttributes, $strTable, $intRoot)
@@ -74,8 +74,8 @@ class RealUrl extends Backend
     // Lables ------------------------------------------------------------------
 
     /**
-     * Callback for the lables on the overview page
-     * 
+     * Callback for the labels on the overview page
+     *
      * @param type $row
      * @param type $label
      * @param DataContainer $dc
@@ -129,7 +129,7 @@ class RealUrl extends Backend
             }
             else
             {
-                $objPage     = $this->getPageDetails($row['id']);
+                $objPage     = \PageModel::findWithDetails($row['id']);
                 $strLanguage = $objPage->language;
             }
         }
@@ -186,7 +186,7 @@ class RealUrl extends Backend
         }
 
         $autoAlias = false;
-        
+
         // Generate an alias if there is none
         if ($varValue == '')
         {
@@ -196,20 +196,31 @@ class RealUrl extends Backend
             }
 
             $autoAlias = true;
-            $varValue  = standardize(String::restoreBasicEntities($dc->activeRecord->title));
+            if (version_compare(VERSION . '.' . BUILD, '3.5.5', '>='))
+            {
+                $varValue  = standardize(StringUtil::restoreBasicEntities($dc->activeRecord->title));
+            }
+            else
+            {
+                $varValue  = standardize(String::restoreBasicEntities($dc->activeRecord->title));
+            }
 
             // Generate folder URL aliases (see #4933)
             if ($GLOBALS['TL_CONFIG']['folderUrl'])
             {
-                $objPage = PageModel::findWithDetails($dc->activeRecord->id);
+                $objPage = \Database::getInstance()
+                    ->prepare('SELECT * FROM tl_page WHERE id = ?')
+                    ->execute($dc->activeRecord->id);
 
                 $intPid = $objPage->pid;
                 $i      = 0;
-                
+
                 while ($i < 90)
                 {
                     // Get parent.
-                    $objParentPage = PageModel::findWithDetails($intPid);
+                    $objParentPage = \Database::getInstance()
+                        ->prepare('SELECT * FROM tl_page WHERE id = ?')
+                        ->execute($intPid);
 
                     // Skip for root or empty.
                     if ($objParentPage->type == 'root' || empty($objParentPage))
@@ -240,8 +251,9 @@ class RealUrl extends Backend
             }
         }
 
-        $objAlias = $this->Database->prepare("SELECT id FROM tl_page WHERE id=? OR alias=?")
-                ->execute($dc->id, $varValue);
+        $objAlias =\Database::getInstance()
+            ->prepare("SELECT id FROM tl_page WHERE id=? OR alias=?")
+            ->execute($dc->id, $varValue);
 
         // Check whether the page alias exists
         if ($objAlias->numRows > ($autoAlias ? 0 : 1))
