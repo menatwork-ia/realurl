@@ -87,40 +87,46 @@ class RealUrl extends Backend
      */
     public function findAlias(array $arrFragments)
     {
-        // See issues #10
-        foreach ($arrFragments as $key => $value) {
-            $arrFragments[$key] = rawurldecode($value);
-        }
+        try {
+            // See issues #10
+            foreach ($arrFragments as $key => $value) {
+                $arrFragments[$key] = rawurldecode($value);
+            }
 
-        // Remove empty strings
-        // Remove auto_item if found
-        // Reset keys
-        $arrFiltered = array_values(array_filter($arrFragments, array(__CLASS__, 'fragmentFilter')));
+            // Remove empty strings
+            // Remove auto_item if found
+            // Reset keys
+            $arrFiltered = array_values(array_filter($arrFragments, array(__CLASS__, 'fragmentFilter')));
 
-        if (!$arrFiltered) {
+            if (!$arrFiltered) {
+                return $arrFragments;
+            }
+
+            // Load the global alias list
+            $listFragments = implode(',', array_fill(0, count($arrFiltered), '?'));
+            $objAlias      = $this
+                ->Database
+                ->prepare(sprintf("SELECT * FROM tl_realurl_aliases WHERE alias IN(%s)", $listFragments))
+                ->execute($arrFiltered);
+
+            $arrKnownAliases = $objAlias->fetchEach("alias");
+
+            // Build alias
+            // Append fragments until an url parameter is found or no fragments are left
+            for ($i = 1; $arrFiltered[$i] !== null && in_array($arrFiltered[$i], $arrKnownAliases); $i++) {
+                ;
+            }
+            array_splice($arrFiltered, 0, $i, implode('/', array_slice($arrFiltered, 0, $i)));
+
+            // Add the second fragment as auto_item if the number of fragments is even
+            if ($GLOBALS['TL_CONFIG']['useAutoItem'] && count($arrFiltered) % 2 == 0) {
+                array_insert($arrFiltered, 1, array('auto_item'));
+            }
+
+            return $arrFiltered;
+        } catch (Exception $ex) {
             return $arrFragments;
         }
-
-        // Load the global alias list
-        $objAlias = $this->Database
-            ->prepare("SELECT * FROM tl_realurl_aliases WHERE alias IN('" . implode("', '", $arrFragments) . "')")
-            ->execute();
-
-        $arrKnownAliases = $objAlias->fetchEach("alias");
-
-        // Build alias
-        // Append fragments until an url parameter is found or no fragments are left
-        for ($i = 1; $arrFiltered[$i] !== null && in_array($arrFiltered[$i], $arrKnownAliases); $i++) {
-            ;
-        }
-        array_splice($arrFiltered, 0, $i, implode('/', array_slice($arrFiltered, 0, $i)));
-
-        // Add the second fragment as auto_item if the number of fragments is even
-        if ($GLOBALS['TL_CONFIG']['useAutoItem'] && count($arrFiltered) % 2 == 0) {
-            array_insert($arrFiltered, 1, array('auto_item'));
-        }
-
-        return $arrFiltered;
     }
 
     /**
@@ -299,14 +305,16 @@ class RealUrl extends Backend
     public function createAliasList()
     {
         // Clear table
-        $this->Database
+        $this
+            ->Database
             ->prepare("TRUNCATE tl_realurl_aliases")
             ->executeUncached();
 
         // Get all aliases
         $arrLists = array();
 
-        $objAlias = $this->Database
+        $objAlias = $this
+            ->Database
             ->prepare("SELECT id, alias FROM tl_page")
             ->execute();
 
@@ -343,7 +351,8 @@ class RealUrl extends Backend
 
     public function regenerateAllAliases()
     {
-        $objRootPages = $this->Database
+        $objRootPages = $this
+            ->Database
             ->prepare('SELECT id, realurl_force_alias FROM tl_page WHERE type="root" AND folderAlias=1')
             ->executeUncached();
 
@@ -357,7 +366,9 @@ class RealUrl extends Backend
 
                 // Update Alias
                 if ($mixAlias != false) {
-                    $this->Database->prepare('UPDATE tl_page %s WHERE id=?')
+                    $this
+                        ->Database
+                        ->prepare('UPDATE tl_page %s WHERE id=?')
                         ->set(array('alias' => $mixAlias))
                         ->executeUncached($objRootPages->id);
                 }
@@ -375,7 +386,9 @@ class RealUrl extends Backend
                             // Add to array, because getPageDetails uses a cached db result
                             $this->addAliasMapper($subValue, $mixAlias);
 
-                            $this->Database->prepare('UPDATE tl_page %s WHERE id=?')
+                            $this
+                                ->Database
+                                ->prepare('UPDATE tl_page %s WHERE id=?')
                                 ->set(array('alias' => $mixAlias))
                                 ->executeUncached($subValue);
                         }
@@ -580,11 +593,12 @@ class RealUrl extends Backend
         if ($GLOBALS['TL_CONFIG']['addLanguageToUrl'] == true) {
             $arrChildren = $this->getChildRecords(array($objPage->rootId), 'tl_page', false);
 
-            if (count($arrCildren) != 0) {
-                $objAlias = $this->Database
-                    ->prepare("SELECT id FROM tl_page WHERE (id=? OR alias=?) AND id IN(" . implode(", ",
-                            $arrChildren) . ")")
-                    ->execute($objPage->id, $varValue);
+            if (count($arrChildren) != 0) {
+                $listChildren = sprintf('\'%s\'', implode("', '", $arrChildren));
+                $objAlias     = $this
+                    ->Database
+                    ->prepare("SELECT id FROM tl_page WHERE (id=? OR alias=?) AND id IN(?)")
+                    ->execute($objPage->id, $varValue, $listChildren);
             } else {
                 $objAlias = $this->Database
                     ->prepare("SELECT id FROM tl_page WHERE (id=? OR alias=?)")
@@ -699,7 +713,6 @@ class RealUrl extends Backend
         if (!empty($strLanguage)) {
             $arrAlias = array_merge(array($strLanguage), $arrAlias);
         }
-
 
         $strPageTitle = array_pop($arrAlias);
 
