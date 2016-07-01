@@ -93,9 +93,7 @@ class RealUrl extends Backend
                 $arrFragments[$key] = rawurldecode($value);
             }
 
-            // Remove empty strings
-            // Remove auto_item if found
-            // Reset keys
+            // Clean the array, remove empty values and auto_item
             $arrFiltered = array_values(array_filter($arrFragments, array(__CLASS__, 'fragmentFilter')));
 
             if (!$arrFiltered) {
@@ -125,6 +123,18 @@ class RealUrl extends Backend
 
             return $arrFiltered;
         } catch (Exception $ex) {
+            $this->log(
+                sprintf
+                (
+                    'There was an error during finding the right alias for the page. File: %s Line: %s Exception: %s',
+                    $ex->getFile(),
+                    $ex->getLine(),
+                    $ex->getMessage()
+                ),
+                __CLASS__ . '::' . __FUNCTION__,
+                TL_ERROR
+            );
+
             return $arrFragments;
         }
     }
@@ -322,7 +332,7 @@ class RealUrl extends Backend
             $strAlias = '';
 
             // Use cache or db
-            if (key_exists($objAlias->id, $this->arrAliasMapper)) {
+            if (array_key_exists($objAlias->id, $this->arrAliasMapper)) {
                 $strAlias = $this->arrAliasMapper[$objAlias->id];
             } else {
                 $strAlias = $objAlias->alias;
@@ -450,7 +460,7 @@ class RealUrl extends Backend
             $objParent = $this->getPageDetails($objPage->pid);
 
             // Get state of no inheritance from cache or database
-            if (key_exists($objParent->id, $this->arrSkipMapper)) {
+            if (array_key_exists($objParent->id, $this->arrSkipMapper)) {
                 $blnNoParentAlias = $this->arrSkipMapper[$objParent->id];
             } else if ($objParent->realurl_no_inheritance == 1) {
                 $blnNoParentAlias = true;
@@ -460,7 +470,7 @@ class RealUrl extends Backend
         }
 
         // Set state of use root alias
-        if (key_exists($objRoot->id, $this->arrRootMapper)) {
+        if (array_key_exists($objRoot->id, $this->arrRootMapper)) {
             $blnUseRootAlias = $this->arrRootMapper[$objRoot->id];
         } else {
             $blnUseRootAlias = $objRoot->useRootAlias;
@@ -535,7 +545,7 @@ class RealUrl extends Backend
                             throw new Exception($GLOBALS['TL_LANG']['ERR']['noPageFound'], $objPage->id);
                         }
 
-                        if (($objValidParent->realurl_no_inheritance == 0 && !key_exists($objValidParent->id,
+                        if (($objValidParent->realurl_no_inheritance == 0 && !array_key_exists($objValidParent->id,
                                     $this->arrSkipMapper)) || $objValidParent->type == 'root'
                         ) {
                             break;
@@ -546,7 +556,7 @@ class RealUrl extends Backend
                     if ($objValidParent->type == 'root') {
                         if ($blnUseRootAlias == true) {
                             // Use the parent alias
-                            if (key_exists($objValidParent->id, $this->arrAliasMapper)) {
+                            if (array_key_exists($objValidParent->id, $this->arrAliasMapper)) {
                                 $varValue = $this->arrAliasMapper[$objValidParent->id] . '/' . $varValue;
                             } else {
                                 $varValue = $objValidParent->alias . '/' . $varValue;
@@ -556,7 +566,7 @@ class RealUrl extends Backend
                         }
                     } else {
                         // Use the parent alias
-                        if (key_exists($objValidParent->id, $this->arrAliasMapper)) {
+                        if (array_key_exists($objValidParent->id, $this->arrAliasMapper)) {
                             $varValue = $this->arrAliasMapper[$objValidParent->id] . '/' . $varValue;
                         } else {
                             $varValue = $objValidParent->alias . '/' . $varValue;
@@ -566,7 +576,7 @@ class RealUrl extends Backend
                     // Check if we have to use the root alias
                     if ($blnUseRootAlias == true) {
                         // Use the parent alias
-                        if (key_exists($objParent->id, $this->arrAliasMapper)) {
+                        if (array_key_exists($objParent->id, $this->arrAliasMapper)) {
                             $varValue = $this->arrAliasMapper[$objParent->id] . '/' . $varValue;
                         } else {
                             $varValue = $objParent->alias . '/' . $varValue;
@@ -577,7 +587,7 @@ class RealUrl extends Backend
                             // Use the value like it is, because the parent page is a root page
                         } else {
                             // Use the parent alias
-                            if (key_exists($objParent->id, $this->arrAliasMapper)) {
+                            if (array_key_exists($objParent->id, $this->arrAliasMapper)) {
                                 $varValue = $this->arrAliasMapper[$objParent->id] . '/' . $varValue;
                             } else {
                                 $varValue = $objParent->alias . '/' . $varValue;
@@ -619,7 +629,7 @@ class RealUrl extends Backend
                 $objCurrentPage = $this->getPageDetails($objAlias->id);
                 $domain         = ($objCurrentPage->domain != '') ? $objCurrentPage->domain : '*';
 
-                if (key_exists($objCurrentPage->rootId, $this->arrLanguageMapper)) {
+                if (array_key_exists($objCurrentPage->rootId, $this->arrLanguageMapper)) {
                     $language = $this->arrLanguageMapper[$objCurrentPage->rootId];
                 } else {
                     $language = (!$objCurrentPage->rootIsFallback) ? $objCurrentPage->rootLanguage : '*';
