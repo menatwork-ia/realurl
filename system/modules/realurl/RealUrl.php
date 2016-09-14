@@ -104,7 +104,7 @@ class RealUrl extends Backend
         foreach ($arrCallback as $value)
         {
             $this->import($value[0]);
-            $label = $this->$value[0]->$value[1]($row, $label, $dc, $imageAttribute, $blnReturnImage, $blnProtected);
+            $label = $this->{$value[0]}->{$value[1]}($row, $label, $dc, $imageAttribute, $blnReturnImage, $blnProtected);
         }
 
         // Return the current lable if realurl  is not in show mode.
